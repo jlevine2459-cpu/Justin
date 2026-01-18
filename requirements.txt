@@ -1,0 +1,28 @@
+# Terminal Graphics Portfolio - Requirements
+# ==========================================
+#
+# This project has ZERO external runtime dependencies!
+# All scripts use only the Python standard library.
+#
+# Python Version Requirement: 3.7+
+# (Required for dataclasses support used in all scripts)
+#
+# To run the demos, you only need:
+#   - Python 3.7 or higher
+#   - A terminal with ANSI color support
+#
+# No pip installation needed! Just run:
+#   python3 raymarcher.py
+#   python3 particle_universe.py
+#   python3 pathfinder_race.py
+#
+
+# ==========================================
+# OPTIONAL: Development Dependencies
+# ==========================================
+# Uncomment these if you want to contribute or maintain the code:
+#
+# mypy>=1.0.0              # Static type checking
+# black>=23.0.0            # Code formatting
+# pylint>=3.0.0            # Code quality linting
+# pytest>=7.0.0            # Testing framework
