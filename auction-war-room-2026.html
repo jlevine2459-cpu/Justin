@@ -1,0 +1,844 @@
+<title>2026 Auction War Room</title>
+<style>
+  /* ---------- theme tokens: light is the base, dark via media query + toggle ---------- */
+  :root {
+    --plane: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --accent: #1e5c41;          /* turf green — brand accent, not a series color */
+    --accent-ink: #ffffff;
+    --good: #006300;
+    --bad: #d03b3b;
+    --rb: #1baf7a;
+    --wr: #2a78d6;
+    --te: #eb6834;
+    --qb: #4a3aa7;
+    --other: #a8a69e;           /* neutral for bench/K/DST spend */
+    --row-alt: #f4f3ef;
+    --tooltip-bg: #0b0b0b;
+    --tooltip-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      --plane: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --accent: #7fd0a0;
+      --accent-ink: #0d0d0d;
+      --good: #0ca30c;
+      --bad: #e66767;
+      --rb: #199e70;
+      --wr: #3987e5;
+      --te: #d95926;
+      --qb: #9085e9;
+      --other: #6b6a64;
+      --row-alt: #202020;
+      --tooltip-bg: #fcfcfb;
+      --tooltip-ink: #0b0b0b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --accent: #7fd0a0;
+    --accent-ink: #0d0d0d;
+    --good: #0ca30c;
+    --bad: #e66767;
+    --rb: #199e70;
+    --wr: #3987e5;
+    --te: #d95926;
+    --qb: #9085e9;
+    --other: #6b6a64;
+    --row-alt: #202020;
+    --tooltip-bg: #fcfcfb;
+    --tooltip-ink: #0b0b0b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--plane);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px 72px; }
+
+  .masthead { padding: 44px 0 20px; border-bottom: 3px solid var(--accent); }
+  .kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  .masthead h1 {
+    font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.02em;
+    line-height: 1.05; margin: 0 0 12px; text-wrap: balance; text-transform: uppercase;
+  }
+  .masthead p.lede { color: var(--ink-2); max-width: 62ch; margin: 0 0 18px; font-size: 15px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .meta-chip {
+    font-size: 12px; font-weight: 600; padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 999px; color: var(--ink-2); background: var(--surface);
+  }
+
+  section { margin-top: 44px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 6px;
+  }
+  section > h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; text-wrap: balance; }
+  .section-sub { color: var(--ink-2); font-size: 14px; margin: 0 0 18px; max-width: 68ch; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .tile .t-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .tile .t-value { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
+  .tile .t-note { font-size: 12.5px; color: var(--ink-2); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-top: 16px;
+  }
+  .card h3 { margin: 0 0 2px; font-size: 16px; font-weight: 700; }
+  .card .card-sub { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
+
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .step:last-child { border-bottom: none; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .step div { font-size: 13.5px; color: var(--ink-2); }
+  .step b { color: var(--ink); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .chart-scroll { overflow-x: auto; position: relative; }
+  svg { display: block; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .dot { cursor: pointer; }
+  .dot:focus { outline: none; }
+  .dot:focus-visible { stroke: var(--ink); stroke-width: 2; }
+  #tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--tooltip-bg); color: var(--tooltip-ink);
+    font-size: 12.5px; line-height: 1.4; padding: 8px 11px; border-radius: 8px;
+    max-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  }
+  #tooltip .tt-name { font-weight: 700; }
+  #tooltip .tt-meta { opacity: 0.75; }
+
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th {
+    text-align: left; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--baseline);
+    white-space: nowrap;
+  }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--row-alt); }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  th.num { text-align: right; }
+  td .p-name { font-weight: 600; white-space: nowrap; }
+  td .p-note { color: var(--ink-2); }
+  .pos-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+  .pos-chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+  .flag { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+  .flag.value { color: var(--good); }
+  .flag.fade { color: var(--bad); }
+  .flag.rookie { color: var(--muted); }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 16px; }
+
+  ul.clean { margin: 0; padding-left: 20px; }
+  ul.clean li { margin: 6px 0; font-size: 13.5px; color: var(--ink-2); }
+  ul.clean li b { color: var(--ink); }
+
+  /* budget calculator */
+  .calc-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .calc-field { display: flex; flex-direction: column; gap: 4px; }
+  .calc-field label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .calc-field input {
+    width: 120px; font-size: 18px; font-weight: 700; padding: 8px 10px;
+    border: 1px solid var(--baseline); border-radius: 8px;
+    background: var(--plane); color: var(--ink);
+    font-variant-numeric: tabular-nums; font-family: inherit;
+  }
+  .calc-field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .calc-out { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+  .calc-tile {
+    flex: 1 1 140px; background: var(--plane); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .calc-tile .t-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .calc-tile .t-value { font-size: 26px; font-weight: 800; }
+  .calc-tile .t-note { font-size: 12px; color: var(--ink-2); }
+  .calc-warn { color: var(--bad); font-weight: 600; font-size: 13px; margin-top: 10px; display: none; }
+
+  .foot { margin-top: 56px; border-top: 1px solid var(--baseline); padding-top: 18px; font-size: 12.5px; color: var(--muted); }
+  .foot a { color: var(--accent); text-decoration: none; }
+  .foot a:hover, .foot a:focus-visible { text-decoration: underline; }
+  .foot ul { columns: 2; column-gap: 32px; margin: 8px 0 16px; padding-left: 18px; }
+  .foot li { margin: 3px 0; }
+  @media (max-width: 640px) { .foot ul { columns: 1; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">ESPN Fantasy Football · Auction Draft · August 2026</p>
+    <h1>2026 Auction War Room</h1>
+    <p class="lede">
+      Everything you need for your first auction: how the format actually works, the prices
+      the market expects, a budget blueprint, a nomination playbook, and a live budget
+      calculator to keep beside you. Built for ESPN's default auction — $200 cap, 10 teams,
+      full PPR, every one of your 16 roster spots bought at the table.
+    </p>
+    <div class="meta-row">
+      <span class="meta-chip">$200 budget · min bid $1</span>
+      <span class="meta-chip">16 roster spots → max single bid $185</span>
+      <span class="meta-chip">10-team · Full PPR</span>
+      <span class="meta-chip">Lineup: QB · 2 RB · 2 WR · TE · FLEX · D/ST · K · 7 Bench</span>
+      <span class="meta-chip">Values snapshot: mid-August 2026</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">Auction 101</p>
+    <h2>Never done this before? Read this first</h2>
+    <p class="section-sub">
+      The one-sentence version: there are no draft slots — every player is available to every
+      team, and the only thing standing between you and Ja'Marr Chase is how much of your $200
+      you're willing to spend.
+    </p>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>How an auction works</h3>
+        <div class="steps">
+          <div class="step"><div><b>Managers take turns nominating players.</b> A nomination opens the bidding at $1 (or whatever the nominator opens with). Nomination order snakes around the room like a draft — but nominating a player does <b>not</b> mean you want him.</div></div>
+          <div class="step"><div><b>Everyone bids, highest bid wins.</b> A short bid clock resets with each new bid. When it expires, the high bidder pays that price out of their $200 and the player is theirs.</div></div>
+          <div class="step"><div><b>This repeats until every roster is full.</b> All 16 of your spots — starters, bench, even kicker and D/ST — are bought this way. Most of your bench will cost $1–3.</div></div>
+          <div class="step"><div><b>The math that governs everything:</b> you must always be able to put at least $1 on each unfilled spot. So your max bid = money left − (open roster spots − 1). ESPN enforces this for you, but the good players track it for everyone <i>else</i> too.</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>The seven rules of your first auction</h3>
+        <div class="steps">
+          <div class="step"><div><b>Write max prices before you draft.</b> For every player you actually want, set the most you'll pay. In the room, never go more than $2–3 over — the moment you "just win the bid," you've lost the auction.</div></div>
+          <div class="step"><div><b>Nominate players you don't want.</b> Early nominations should be big names you're avoiding — someone else's $46 on McCaffrey is your discount later.</div></div>
+          <div class="step"><div><b>Never show your hand early.</b> Don't nominate your quiet targets while everyone still has fresh money. Let them surface after budgets have bled.</div></div>
+          <div class="step"><div><b>Cap the stars.</b> Spending more than ~65–70% of your budget on three players is the classic first-auction blowup. Stars win leagues; three stars and thirteen $1 lottery tickets usually don't.</div></div>
+          <div class="step"><div><b>Watch the room's money, not just yours.</b> ESPN shows every team's remaining budget. When the big spenders are tapped out, prices collapse — that's your buying window.</div></div>
+          <div class="step"><div><b>The mid-auction lull is where leagues are won.</b> After the stars go, the room gets cautious and $25 players go for $17. Be the one still bidding.</div></div>
+          <div class="step"><div><b>Spend all of it.</b> Unspent budget is points you left on the table. Ending the draft with $15 in hand is a loss, not discipline.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The five theses</p>
+    <h2>How to think about this auction</h2>
+    <div class="tiles" style="margin-top:14px;">
+      <div class="tile">
+        <span class="t-label">Winning split</span>
+        <span class="t-value">~45% RB · ~38% WR</span>
+        <span class="t-note">Winning auction rosters put about $90 on running backs and $76 on receivers, leaving little for QB and TE — the market agrees with the snake board.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Top of market</span>
+        <span class="t-value">Chase at $64</span>
+        <span class="t-note">The most expensive player on the board. Gibbs (~$60) edges Bijan among RBs. One of these three should anchor your roster.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Cheapest edge</span>
+        <span class="t-value">QB for ~$15</span>
+        <span class="t-note">Skip Allen's price tag. Lamar Jackson and Jayden Daniels cost a quarter of what Chase does and score nearly as many points.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Biggest overpay</span>
+        <span class="t-value">CMC at $46</span>
+        <span class="t-note">The same landmine as the snake board, now with a price tag: age 30, league-leading 2025 workload, injury file.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Endgame gold</span>
+        <span class="t-value">$1–3 players</span>
+        <span class="t-note">Diggs, Downs, Okonkwo, Hubbard — the snake board's round-10 sleepers cost pocket change here. Save $8–12 to win those wars.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The blueprint</p>
+    <h2>Three ways to spend $200</h2>
+    <p class="section-sub">
+      Same $200, three philosophies. For a first auction, run the <b>Balanced</b> build: it
+      keeps you in every bidding war that matters without the white-knuckle endgame of
+      Stars &amp; Scrubs. Segments show dollars by position group; "Rest" is bench darts plus
+      kicker and D/ST.
+    </p>
+    <div class="card">
+      <h3>Budget allocation by build</h3>
+      <p class="card-sub">Dollars of the $200 cap committed to each position group · hover any segment for detail</p>
+      <div class="legend" id="build-legend"></div>
+      <div class="chart-scroll"><div id="build-chart" style="min-width:560px;"></div></div>
+      <div class="table-scroll" style="margin-top:14px;">
+        <table>
+          <thead><tr><th>Build</th><th>Shape</th><th>Who it suits</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Stars &amp; Scrubs</span></td><td class="p-note">Three or four elites (~$150–165), everyone else $1–3.</td><td class="p-note">High risk, high ceiling. You'll live on the waiver wire. Not recommended for a first auction.</td></tr>
+            <tr><td><span class="p-name">Balanced</span> <span class="flag value">RECOMMENDED</span></td><td class="p-note">One anchor at ~$45–55, six or seven starters in the $15–35 band, real money saved for the endgame.</td><td class="p-note">First-timers. Forgiving of one mistake, competitive at every position.</td></tr>
+            <tr><td><span class="p-name">Depth &amp; Value</span></td><td class="p-note">No player over ~$35. Hoard the mid-auction discounts and dominate the middle class.</td><td class="p-note">Patient personalities. Strongest when the room overspends early — which first-year rooms always do.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The prices</p>
+    <h2>What the board should cost</h2>
+    <p class="section-sub">
+      Approximate market values for a $200, 10-team, full-PPR auction, mid-August 2026.
+      Treat every number as an anchor, not a script — the whole game is buying players
+      below these prices and letting opponents pay above them. Full table with notes below.
+    </p>
+
+    <div class="card">
+      <h3>Where the money sits, by position</h3>
+      <p class="card-sub">Each dot is one player at his expected price · hover or tab to any dot for detail</p>
+      <div class="legend" id="legend"></div>
+      <div class="chart-scroll"><div id="lanes-chart" style="min-width:720px;"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>The price board — top 48 with notes</h3>
+      <p class="card-sub">Flags: <span class="flag value">BUY</span> = pay list price happily · <span class="flag fade">AVOID</span> = let someone else pay it · <span class="flag rookie">ROOKIE</span></p>
+      <div class="table-scroll">
+        <table id="board-table">
+          <thead>
+            <tr>
+              <th class="num">$</th><th>Player</th><th>Pos</th><th>Team</th><th>Flag</th><th>Note</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Edges</p>
+    <h2>Where to spend, where to sit out</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>Pay list price happily</h3>
+        <p class="card-sub">The best price-versus-points gaps on the board, with a ceiling bid</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th class="num">Pay up to</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Jahmyr Gibbs</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · DET</span></td><td class="num">$62</td><td class="p-note">The one elite worth a small overpay — Montgomery gone, workload finally his.</td></tr>
+            <tr><td><span class="p-name">Lamar Jackson</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · BAL</span></td><td class="num">$18</td><td class="p-note">Elite QB production at a fifth of elite RB cost. The single best line on the board.</td></tr>
+            <tr><td><span class="p-name">Chase Brown</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · CIN</span></td><td class="num">$32</td><td class="p-note">Rooms keep letting him go under value, same as mocks do.</td></tr>
+            <tr><td><span class="p-name">Ladd McConkey</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · LAC</span></td><td class="num">$24</td><td class="p-note">Priced like a WR2, profiles like a WR1's target share.</td></tr>
+            <tr><td><span class="p-name">Colston Loveland</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · CHI</span></td><td class="num">$16</td><td class="p-note">Tier-1 TE upside without the Bowers/McBride invoice.</td></tr>
+            <tr><td><span class="p-name">Sam LaPorta</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · DET</span></td><td class="num">$13</td><td class="p-note">New OC funnels through TEs; the back injury is priced in at this number.</td></tr>
+            <tr><td><span class="p-name">Xavier Worthy</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · KC</span></td><td class="num">$11</td><td class="p-note">League-winner ceiling for lunch money.</td></tr>
+            <tr><td><span class="p-name">Stefon Diggs</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · WAS</span></td><td class="num">$5</td><td class="p-note">Proven target-earner in a new home, at bench-dart cost.</td></tr>
+            <tr><td><span class="p-name">Chuba Hubbard</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · CAR</span></td><td class="num">$6</td><td class="p-note">Bankable touches; the boring $5 that saves your season.</td></tr>
+            <tr><td><span class="p-name">Josh Downs</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · IND</span></td><td class="num">$3</td><td class="p-note">PPR floor as your WR4 for the cost of a sandwich.</td></tr>
+            <tr><td><span class="p-name">Chig Okonkwo</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · WAS</span></td><td class="num">$2</td><td class="p-note">Washington's TE1 role, essentially free.</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3>Sit out these bidding wars</h3>
+        <p class="card-sub">Market price vs. what this board would actually pay</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th class="num">Market</th><th class="num">My cap</th><th>The problem</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Christian McCaffrey</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · SF</span></td><td class="num">$46</td><td class="num">$30</td><td class="p-note">Age 30 + league-leading carries + injury file. Nominate him early and watch someone pay $50.</td></tr>
+            <tr><td><span class="p-name">Josh Allen</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · BUF</span></td><td class="num">$24</td><td class="num">$18</td><td class="p-note">The best QB, but the gap to Lamar/Daniels never repays the gap in price.</td></tr>
+            <tr><td><span class="p-name">Patrick Mahomes</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · KC</span></td><td class="num">$14</td><td class="num">$7</td><td class="p-note">2025's rushing spike is unsustainable post-knee-injury; the name still costs extra.</td></tr>
+            <tr><td><span class="p-name">De'Von Achane</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · MIA</span></td><td class="num">$44</td><td class="num">$34</td><td class="p-note">New coach, new scheme, Malik Willis at QB. Talent survives; the price assumes it thrives.</td></tr>
+            <tr><td><span class="p-name">Saquon Barkley</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · PHI</span></td><td class="num">$48</td><td class="num">$38</td><td class="p-note">Age 29 on two years of enormous touches — fine at a discount that won't come.</td></tr>
+            <tr><td><span class="p-name">George Kittle</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · SF</span></td><td class="num">$8</td><td class="num">$4</td><td class="p-note">Post-Achilles at 33. The name brand costs more than the outlook.</td></tr>
+            <tr><td><span class="p-name">TreVeyon Henderson</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · NE</span></td><td class="num">$13</td><td class="num">$8</td><td class="p-note">Priced like a workhorse; the role isn't one yet.</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="card-sub" style="margin:12px 0 0;">"My cap" is the bid where this board would stop. If the room lets one of these fall below it — that's not a fade anymore, that's a value. Prices change everything.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Tools</p>
+    <h2>Nomination playbook &amp; live budget math</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>What to nominate, in order</h3>
+        <div class="steps">
+          <div class="step"><div><b>Openers (your first 3–4 turns):</b> big names you're avoiding — McCaffrey, Achane, Saquon, Allen. Stars get paid no matter who calls the name; make sure it's not your money.</div></div>
+          <div class="step"><div><b>Early-middle:</b> hyped names just below the elite — the room's favorite sleepers, rookies with buzz (Jeremiyah Love will start a war). Keep draining other budgets.</div></div>
+          <div class="step"><div><b>Middle:</b> now float your real targets, one at a time, while the room licks its wounds. This is when Chase Brown goes for $24 and McConkey for $19.</div></div>
+          <div class="step"><div><b>Late:</b> nominate kickers and defenses when <i>other</i> managers still have money to burn — every $2 they spend on a kicker is $2 that can't outbid your endgame sleepers.</div></div>
+          <div class="step"><div><b>One warning:</b> "price enforcement" — bidding a player up just to cost a rival money — is how first-timers end up owning a $38 player they never wanted. Only bid what you'd happily pay.</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>Live budget calculator</h3>
+        <p class="card-sub">Keep this open during the draft — enter your state after each win</p>
+        <div class="calc-row">
+          <div class="calc-field">
+            <label for="calc-spent">$ spent so far</label>
+            <input id="calc-spent" type="number" min="0" max="200" value="0" inputmode="numeric">
+          </div>
+          <div class="calc-field">
+            <label for="calc-filled">Roster spots filled</label>
+            <input id="calc-filled" type="number" min="0" max="16" value="0" inputmode="numeric">
+          </div>
+        </div>
+        <div class="calc-out">
+          <div class="calc-tile"><div class="t-label">Budget left</div><div class="t-value" id="out-left">$200</div><div class="t-note">of $200</div></div>
+          <div class="calc-tile"><div class="t-label">Max single bid</div><div class="t-value" id="out-max">$185</div><div class="t-note">keeps $1 for every open spot</div></div>
+          <div class="calc-tile"><div class="t-label">Avg per open spot</div><div class="t-value" id="out-avg">$12.50</div><div class="t-note">across <span id="out-open">16</span> spots left</div></div>
+        </div>
+        <p class="calc-warn" id="calc-warn">Check those numbers — that combination isn't possible in a $200 / 16-spot auction.</p>
+        <p class="card-sub" style="margin:14px 0 0;">Rule of thumb: if your average-per-open-spot drops under $3 before your starting lineup is full, you've overspent. If it's still over $20 halfway through, you're being too shy.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Logistics</p>
+    <h2>ESPN auction room notes &amp; first-timer checklist</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>Know your ESPN room</h3>
+        <ul class="clean">
+          <li><b>Defaults:</b> $200 budget, $1 minimum bid, all 16 roster spots filled by auction, nomination order snakes. Confirm the scoring is full PPR before anything else — dollar values shift with scoring just like rankings do.</li>
+          <li><b>ESPN enforces your max bid automatically</b> (budget minus $1 per remaining spot), and displays every team's remaining budget — use that panel constantly; it's the whole game.</li>
+          <li><b>The bid clock is short and resets on every bid.</b> Decide your ceiling <i>before</i> bidding starts, not during the countdown — the clock is designed to make you emotional.</li>
+          <li><b>Do one ESPN mock auction before the real one.</b> The interface (nominate, quick-bid buttons, budget panel) is half the learning curve, and mocks are free reps.</li>
+          <li><b>If you disconnect,</b> ESPN's auto-pilot bids conservatively off its own values — another reason to pre-rank your player list and keep the app installed as backup.</li>
+          <li><b>Roster math:</b> 9 starters + 7 bench. About $180–190 of your $200 belongs on the 9 starters; bench spots should almost all be $1–3.</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>The last 24 hours</h3>
+        <ul class="clean">
+          <li><b>Print or split-screen the price board above</b> and mark 20–25 targets across price bands with your personal max on each.</li>
+          <li><b>Re-check values the morning of the draft</b> — August news moves auction prices just like ADP, and this page is a mid-August snapshot.</li>
+          <li><b>Scrub the injury report</b> — Kittle (Achilles), LaPorta (back), Taylor's QB situation — before trusting any price here.</li>
+          <li><b>Plan two anchor paths:</b> the room decides whether you get Gibbs at $60 or pivot to Taylor + McConkey for the same money. Both must be written down in advance.</li>
+          <li><b>Budget $8–12 for the endgame</b> — that's what wins Diggs at $3 and Okonkwo at $2 while rivals are max-bid $1.</li>
+          <li><b>$1 on kicker, $1 on D/ST.</b> No exceptions, no matter how the room behaves.</li>
+          <li><b>Expect to lose your favorite player.</b> The plan isn't a roster, it's a set of prices. If the room pays over your caps all night, your team gets built in the middle rounds — and that team usually wins.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Sources</b> — auction values and strategy synthesized from public analysis, August 2026:</p>
+    <ul>
+      <li><a href="https://www.draftsharks.com/auction-values/ppr">Draft Sharks PPR auction values</a></li>
+      <li><a href="https://www.fftoday.com/rankings/26-av-ppr.html">FFToday 2026 PPR auction values</a></li>
+      <li><a href="https://www.fantasynerds.com/nfl/auction">Fantasy Nerds $200 auction values</a></li>
+      <li><a href="https://www.rotowire.com/football/auction-values.php">RotoWire auction values</a></li>
+      <li><a href="https://www.fantasyalarm.com/articles/nfl/fantasy-football-draft-guide/2026-fantasy-football-auction-draft-strategy/191514">Fantasy Alarm auction draft strategy</a></li>
+      <li><a href="https://www.fantasypros.com/2026/06/fantasy-football-salary-cap-draft-strategy-targets-2026/">FantasyPros salary cap strategy &amp; targets</a></li>
+      <li><a href="https://www.fantasylife.com/articles/fantasy/auction-fantasy-football-draft-strategy-for-2026">Fantasy Life: nomination &amp; bidding strategy</a></li>
+      <li><a href="https://www.fantasylife.com/articles/fantasy/tight-end-strategy-for-2026-fantasy-football-auction-drafts">Fantasy Life: TE auction strategy</a></li>
+      <li><a href="https://www.si.com/onsi/fantasy/rankings/the-ultimate-fantasy-football-auction-draft-guide-2026-is-jahmyr-gibbs-other-elite-players-worth-the-price">SI ultimate auction draft guide</a></li>
+      <li><a href="https://hellorookie.com/fantasy-football-auction-draft-strategy-budget-tiers-nomination-tricks-and-value-targets/amp/">Hello Rookie: budget tiers &amp; nomination tricks</a></li>
+      <li><a href="https://sports.yahoo.com/fantasy/article/2026-fantasy-football-full-ppr-rankings-consensus-top-300-players-175205585.html">Yahoo Sports consensus top-300 PPR rankings</a></li>
+      <li><a href="https://www.espn.com/fantasy/football/story/_/page/FFDraftGuide26-48677635/2026-fantasy-football-rankings-mock-draft-cheat-sheets-sleepers">ESPN 2026 Fantasy Draft Guide</a></li>
+    </ul>
+    <p>Dollar values are approximate market consensus for a $200 / 10-team / full-PPR auction as of
+    mid-August 2026, and they move daily — verify against your live draft room. Companion page:
+    the snake-draft edition of this war room covers tiers, sleepers, and rookies in more depth.
+    Not affiliated with ESPN.</p>
+  </footer>
+
+</div>
+
+<div id="tooltip" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* Approximate $200 / 10-team / full-PPR auction values, mid-August 2026.
+     flag: b=buy, a=avoid, r=rookie */
+  var PLAYERS = [
+    { val: 64, name: "Ja'Marr Chase",       pos: "WR", team: "CIN", note: "Most expensive player on the board, and worth it in full PPR." },
+    { val: 60, name: "Jahmyr Gibbs",        pos: "RB", team: "DET", flag: "b", note: "Edges Bijan in most value models — Montgomery gone, workload his." },
+    { val: 58, name: "Bijan Robinson",      pos: "RB", team: "ATL", note: "The other defensible top RB anchor." },
+    { val: 56, name: "Puka Nacua",          pos: "WR", team: "LAR", note: "~10 targets a game for three straight years." },
+    { val: 55, name: "Justin Jefferson",    pos: "WR", team: "MIN", note: "Elite as ever; pay list, don't chase a war." },
+    { val: 54, name: "CeeDee Lamb",         pos: "WR", team: "DAL", note: "Target hog with a safe floor." },
+    { val: 48, name: "Saquon Barkley",      pos: "RB", team: "PHI", flag: "a", note: "Age 29 on two seasons of massive touches — fine $10 cheaper." },
+    { val: 46, name: "Christian McCaffrey", pos: "RB", team: "SF",  flag: "a", note: "Age 30, led the NFL in carries in 2025. Nominate him, don't buy him." },
+    { val: 45, name: "Jonathan Taylor",     pos: "RB", team: "IND", note: "RB1 ceiling at a tier-2 price; monitor Daniel Jones' health." },
+    { val: 44, name: "De'Von Achane",       pos: "RB", team: "MIA", flag: "a", note: "New coach, new scheme, Malik Willis at QB." },
+    { val: 42, name: "Ashton Jeanty",       pos: "RB", team: "LV",  flag: "b", note: "Year-2 bounce priced below his 2025 hype — the discount is the point." },
+    { val: 41, name: "Amon-Ra St. Brown",   pos: "WR", team: "DET", note: "The PPR floor king." },
+    { val: 40, name: "Jaxon Smith-Njigba",  pos: "WR", team: "SEA", note: "Coming off a monster 2025." },
+    { val: 38, name: "Omarion Hampton",     pos: "RB", team: "LAC", note: "Year-2 leap candidate, backfield to himself." },
+    { val: 38, name: "Drake London",        pos: "WR", team: "ATL", note: "True-WR1 territory now." },
+    { val: 36, name: "Brock Bowers",        pos: "TE", team: "LV",  note: "Positional monopoly pricing — worth it only if you skip an RB anchor." },
+    { val: 35, name: "Derrick Henry",       pos: "RB", team: "BAL", note: "Age discount already baked in; steal if he defies it again." },
+    { val: 34, name: "Nico Collins",        pos: "WR", team: "HOU", note: "Alpha share when healthy." },
+    { val: 33, name: "A.J. Brown",          pos: "WR", team: "PHI", note: "Market is split — which means the room decides the price, not the list." },
+    { val: 33, name: "Malik Nabers",        pos: "WR", team: "NYG", note: "Target monster regardless of QB." },
+    { val: 31, name: "Chase Brown",         pos: "RB", team: "CIN", flag: "b", note: "Consistently goes under list — the auction's quietest bargain." },
+    { val: 30, name: "Trey McBride",        pos: "TE", team: "ARI", note: "Co-TE1 at a small discount to Bowers." },
+    { val: 28, name: "Kyren Williams",      pos: "RB", team: "LAR", note: "Steady volume, TD-dependent scoring." },
+    { val: 26, name: "Josh Jacobs",         pos: "RB", team: "GB",  note: "TD volume keeps the floor high." },
+    { val: 25, name: "Tee Higgins",         pos: "WR", team: "CIN", note: "WR1 stretches when healthy." },
+    { val: 24, name: "Josh Allen",          pos: "QB", team: "BUF", flag: "a", note: "Six straight top-2 finishes — but $24 vs $17 Lamar is the wrong war." },
+    { val: 23, name: "Garrett Wilson",      pos: "WR", team: "NYJ", note: "Volume is never the question." },
+    { val: 22, name: "James Cook",          pos: "RB", team: "BUF", note: "Efficient lead back in an elite offense." },
+    { val: 21, name: "Ladd McConkey",       pos: "WR", team: "LAC", flag: "b", note: "Sharp money's favorite WR price of the summer." },
+    { val: 20, name: "Kenneth Walker III",  pos: "RB", team: "SEA", note: "Explosive; health is the swing." },
+    { val: 19, name: "Breece Hall",         pos: "RB", team: "NYJ", note: "Talent discount after a muddled 2025." },
+    { val: 18, name: "Jeremiyah Love",      pos: "RB", team: "ARI", flag: "r", note: "No. 3 overall pick — will start a bidding war; hold your number." },
+    { val: 17, name: "Lamar Jackson",       pos: "QB", team: "BAL", flag: "b", note: "Elite production, mid-tier invoice. Best line on the board." },
+    { val: 17, name: "Marvin Harrison Jr.", pos: "WR", team: "ARI", note: "Priced for the middle outcome." },
+    { val: 16, name: "Jayden Daniels",      pos: "QB", team: "WAS", note: "The other half of the cheap-elite-QB plan." },
+    { val: 16, name: "Tetairoa McMillan",   pos: "WR", team: "CAR", note: "Carolina's clear No. 1 target." },
+    { val: 15, name: "Rashee Rice",         pos: "WR", team: "KC",  note: "Target-per-snap elite when on the field." },
+    { val: 14, name: "Colston Loveland",    pos: "TE", team: "CHI", flag: "b", note: "The only TE with a path into the top tier, at a third of the price." },
+    { val: 14, name: "Patrick Mahomes",     pos: "QB", team: "KC",  flag: "a", note: "Post-knee-injury, and the 2025 rushing spike won't repeat." },
+    { val: 13, name: "Jalen Hurts",         pos: "QB", team: "PHI", note: "The rushing-TD cheat code, fairly priced." },
+    { val: 13, name: "TreVeyon Henderson",  pos: "RB", team: "NE",  flag: "a", note: "Priced like a workhorse; the role isn't one yet." },
+    { val: 12, name: "Sam LaPorta",         pos: "TE", team: "DET", flag: "b", note: "New OC funnels through TEs; back injury priced in at this number." },
+    { val: 12, name: "Davante Adams",       pos: "WR", team: "LAR", note: "Route-running ages last." },
+    { val: 11, name: "Brian Thomas Jr.",    pos: "WR", team: "JAX", note: "Bounce-back case after a down 2025." },
+    { val: 10, name: "Xavier Worthy",       pos: "WR", team: "KC",  flag: "b", note: "League-winner ceiling for lunch money." },
+    { val: 9,  name: "Bucky Irving",        pos: "RB", team: "TB",  note: "Market cooled; PPR chops remain." },
+    { val: 8,  name: "Jaylen Waddle",       pos: "WR", team: "MIA", note: "Cheap for the talent; offense is the worry." },
+    { val: 8,  name: "George Kittle",       pos: "TE", team: "SF",  flag: "a", note: "Post-Achilles at 33 — the name costs more than the outlook." }
+  ];
+
+  /* Fixed lane / stack order (validated palette order): RB, WR, TE, QB (+ neutral Rest) */
+  var LANES = ["RB", "WR", "TE", "QB"];
+  var LANE_LABELS = { RB: "Running back", WR: "Wide receiver", TE: "Tight end", QB: "Quarterback" };
+  var POS_VAR = { RB: "--rb", WR: "--wr", TE: "--te", QB: "--qb" };
+  var FLAGS = { b: ["BUY", "value"], a: ["AVOID", "fade"], r: ["ROOKIE", "rookie"] };
+  var NS = "http://www.w3.org/2000/svg";
+
+  function el(tag, attrs, parent) {
+    var node = document.createElementNS(NS, tag);
+    for (var key in attrs) node.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+  function cssVar(name) { return "var(" + name + ")"; }
+  function posRank(player) {
+    var rank = 0;
+    for (var i = 0; i < PLAYERS.length; i++) {
+      if (PLAYERS[i].pos === player.pos) {
+        rank++;
+        if (PLAYERS[i] === player) return rank;
+      }
+    }
+    return rank;
+  }
+
+  /* ---------- tooltip ---------- */
+  var tooltip = document.getElementById("tooltip");
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    moveTip(evt);
+  }
+  function moveTip(evt) {
+    var x = (evt.clientX || 0) + 14, y = (evt.clientY || 0) + 14;
+    var rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth - 8) x = evt.clientX - rect.width - 14;
+    if (y + rect.height > window.innerHeight - 8) y = evt.clientY - rect.height - 14;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+  }
+  function hideTip() { tooltip.style.display = "none"; }
+  function tipHTML(p) {
+    return '<div class="tt-name">' + p.name + '</div>' +
+      '<div class="tt-meta">' + p.pos + posRank(p) + ' · ' + p.team + ' · $' + p.val + '</div>' +
+      (p.note ? '<div>' + p.note + '</div>' : '');
+  }
+  function bindTip(node, html) {
+    node.addEventListener("mouseenter", function (e) { showTip(e, html); });
+    node.addEventListener("mousemove", moveTip);
+    node.addEventListener("mouseleave", hideTip);
+    node.addEventListener("focus", function () {
+      var r = node.getBoundingClientRect();
+      showTip({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }, html);
+    });
+    node.addEventListener("blur", hideTip);
+  }
+
+  /* ---------- shared legend builder ---------- */
+  function buildLegend(target, entries) {
+    entries.forEach(function (entry) {
+      var span = document.createElement("span");
+      var swatch = document.createElement("i");
+      swatch.style.background = cssVar(entry[0]);
+      span.appendChild(swatch);
+      span.appendChild(document.createTextNode(entry[1]));
+      target.appendChild(span);
+    });
+  }
+  buildLegend(document.getElementById("legend"), LANES.map(function (pos) {
+    return [POS_VAR[pos], LANE_LABELS[pos]];
+  }));
+  buildLegend(document.getElementById("build-legend"), LANES.map(function (pos) {
+    return [POS_VAR[pos], LANE_LABELS[pos]];
+  }).concat([["--other", "Rest (bench · K · D/ST)"]]));
+
+  /* ---------- chart: budget builds, stacked horizontal bars ---------- */
+  (function buildChart() {
+    var BUILDS = [
+      { label: "Stars & Scrubs", spend: { RB: 90, WR: 78, TE: 5,  QB: 8,  Rest: 19 } },
+      { label: "Balanced",       spend: { RB: 82, WR: 70, TE: 16, QB: 14, Rest: 18 } },
+      { label: "Depth & Value",  spend: { RB: 60, WR: 56, TE: 22, QB: 22, Rest: 40 } }
+    ];
+    var ORDER = ["RB", "WR", "TE", "QB", "Rest"];
+    var VARS = { RB: "--rb", WR: "--wr", TE: "--te", QB: "--qb", Rest: "--other" };
+    var TIP_LABEL = { RB: "Running backs", WR: "Wide receivers", TE: "Tight end", QB: "Quarterback", Rest: "Bench + K + D/ST" };
+
+    var W = 760, padL = 118, padR = 16, padT = 8, barH = 26, rowGap = 14, axisH = 26;
+    var H = padT + BUILDS.length * (barH + rowGap) + axisH;
+    var innerW = W - padL - padR;
+    var perDollar = innerW / 200;
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", role: "img",
+      "aria-label": "Three ways to allocate a 200 dollar auction budget across positions" });
+    document.getElementById("build-chart").appendChild(svg);
+    var defs = el("defs", {}, svg);
+
+    BUILDS.forEach(function (build, i) {
+      var y = padT + i * (barH + rowGap);
+      var rowLabel = el("text", { x: padL - 12, y: y + barH / 2 + 4, "text-anchor": "end",
+        "font-size": 12, "font-weight": 700, fill: cssVar("--ink") }, svg);
+      rowLabel.textContent = build.label;
+
+      var clipId = "build-clip-" + i;
+      var clip = el("clipPath", { id: clipId }, defs);
+      el("rect", { x: padL, y: y, width: 200 * perDollar, height: barH, rx: 4 }, clip);
+
+      var group = el("g", { "clip-path": "url(#" + clipId + ")" }, svg);
+      var cursor = padL;
+      ORDER.forEach(function (key) {
+        var dollars = build.spend[key];
+        if (!dollars) return;
+        var width = dollars * perDollar;
+        var seg = el("rect", { x: cursor + 1, y: y, width: width - 2, height: barH,
+          fill: cssVar(VARS[key]) }, group);
+        bindTip(seg, '<div class="tt-name">' + TIP_LABEL[key] + '</div>' +
+          '<div class="tt-meta">' + build.label + ' · $' + dollars + ' of $200 (' +
+          Math.round(dollars / 2) + '%)</div>');
+        if (width >= 30) {
+          var segLabel = el("text", { x: cursor + width / 2, y: y + barH / 2 + 4, "text-anchor": "middle",
+            "font-size": 11, "font-weight": 700, fill: cssVar("--surface") }, svg);
+          segLabel.textContent = "$" + dollars;
+        }
+        cursor += width;
+      });
+    });
+
+    /* x-axis dollar ticks */
+    [0, 50, 100, 150, 200].forEach(function (dollars) {
+      var x = padL + dollars * perDollar;
+      var tick = el("text", { x: x, y: H - 8, "text-anchor": dollars === 200 ? "end" : (dollars === 0 ? "start" : "middle"),
+        "font-size": 10.5, fill: cssVar("--muted"), style: "font-variant-numeric: tabular-nums" }, svg);
+      tick.textContent = "$" + dollars;
+    });
+  })();
+
+  /* ---------- chart: price lanes ---------- */
+  (function lanesChart() {
+    var W = 960, padL = 118, padR = 20, padT = 24, laneH = 52, axisH = 34;
+    var H = padT + LANES.length * laneH + axisH;
+    var innerW = W - padL - padR;
+    var maxVal = 68;
+    var x = function (val) { return padL + val / maxVal * innerW; };
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", role: "img",
+      "aria-label": "Expected auction price of the top 48 players, grouped into position lanes" });
+    document.getElementById("lanes-chart").appendChild(svg);
+
+    /* $ gridlines */
+    for (var dollars = 10; dollars <= 60; dollars += 10) {
+      el("line", { x1: x(dollars), x2: x(dollars), y1: padT - 6,
+        y2: padT + LANES.length * laneH, stroke: cssVar("--grid"), "stroke-width": 1 }, svg);
+      var gLabel = el("text", { x: x(dollars), y: padT - 10, "text-anchor": "middle",
+        "font-size": 10.5, fill: cssVar("--muted"), style: "font-variant-numeric: tabular-nums" }, svg);
+      gLabel.textContent = "$" + dollars;
+    }
+    el("line", { x1: padL, x2: W - padR, y1: padT + LANES.length * laneH,
+      y2: padT + LANES.length * laneH, stroke: cssVar("--baseline"), "stroke-width": 1 }, svg);
+    var axisLabel = el("text", { x: W - padR, y: padT + LANES.length * laneH + 20, "text-anchor": "end",
+      "font-size": 10.5, fill: cssVar("--muted") }, svg);
+    axisLabel.textContent = "Expected price ($200 budget)";
+
+    /* lanes */
+    LANES.forEach(function (pos, i) {
+      var cy = padT + i * laneH + laneH / 2;
+      var group = PLAYERS.filter(function (p) { return p.pos === pos; });
+      var total = group.reduce(function (sum, p) { return sum + p.val; }, 0);
+      var lab = el("text", { x: padL - 12, y: cy - 2, "text-anchor": "end", "font-size": 12,
+        "font-weight": 700, fill: cssVar("--ink") }, svg);
+      lab.textContent = pos;
+      var sub = el("text", { x: padL - 12, y: cy + 12, "text-anchor": "end", "font-size": 10.5,
+        fill: cssVar("--muted") }, svg);
+      sub.textContent = "$" + total + " listed";
+      el("line", { x1: padL, x2: W - padR, y1: cy, y2: cy, stroke: cssVar("--grid"),
+        "stroke-width": 1 }, svg);
+    });
+
+    /* dots + selective direct labels (most expensive per lane).
+       Same price in the same lane would stack exactly — nudge duplicates down. */
+    var labeled = {}, seen = {};
+    PLAYERS.forEach(function (p) {
+      var laneIdx = LANES.indexOf(p.pos);
+      var dupKey = p.pos + ":" + p.val;
+      seen[dupKey] = (seen[dupKey] || 0) + 1;
+      var cy = padT + laneIdx * laneH + laneH / 2 + (seen[dupKey] - 1) * 12;
+      var cx = x(p.val);
+      var dot = el("circle", { cx: cx, cy: cy, r: 5.5, fill: cssVar(POS_VAR[p.pos]),
+        stroke: cssVar("--surface"), "stroke-width": 2, "class": "dot", tabindex: 0,
+        role: "img", "aria-label": p.name + ", " + p.pos + ", " + p.val + " dollars" }, svg);
+      var hit = el("circle", { cx: cx, cy: cy, r: 12, fill: "transparent", "pointer-events": "all" }, svg);
+      bindTip(dot, tipHTML(p));
+      bindTip(hit, tipHTML(p));
+      if (!labeled[p.pos]) {
+        labeled[p.pos] = true;
+        var nameLabel = el("text", { x: cx + 2, y: cy - 12, "text-anchor": "end", "font-size": 10.5,
+          "font-weight": 600, fill: cssVar("--ink-2") }, svg);
+        nameLabel.textContent = p.name.replace(/^\S+\s/, "") + " $" + p.val;
+      }
+    });
+  })();
+
+  /* ---------- price board table ---------- */
+  (function boardTable() {
+    var tbody = document.querySelector("#board-table tbody");
+    PLAYERS.forEach(function (p) {
+      var tr = document.createElement("tr");
+
+      var tdVal = document.createElement("td");
+      tdVal.className = "num";
+      tdVal.textContent = "$" + p.val;
+      tr.appendChild(tdVal);
+
+      var tdName = document.createElement("td");
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "p-name";
+      nameSpan.textContent = p.name;
+      tdName.appendChild(nameSpan);
+      tr.appendChild(tdName);
+
+      var tdPos = document.createElement("td");
+      var chip = document.createElement("span");
+      chip.className = "pos-chip";
+      var swatch = document.createElement("i");
+      swatch.style.background = cssVar(POS_VAR[p.pos]);
+      chip.appendChild(swatch);
+      chip.appendChild(document.createTextNode(p.pos + posRank(p)));
+      tdPos.appendChild(chip);
+      tr.appendChild(tdPos);
+
+      var tdTeam = document.createElement("td");
+      tdTeam.textContent = p.team;
+      tr.appendChild(tdTeam);
+
+      var tdFlag = document.createElement("td");
+      if (p.flag) {
+        var f = FLAGS[p.flag];
+        var flagSpan = document.createElement("span");
+        flagSpan.className = "flag " + f[1];
+        flagSpan.textContent = f[0];
+        tdFlag.appendChild(flagSpan);
+      }
+      tr.appendChild(tdFlag);
+
+      var tdNote = document.createElement("td");
+      tdNote.className = "p-note";
+      tdNote.textContent = p.note || "";
+      tr.appendChild(tdNote);
+
+      tbody.appendChild(tr);
+    });
+  })();
+
+  /* ---------- budget calculator ---------- */
+  (function calculator() {
+    var TOTAL = 200, SPOTS = 16;
+    var spentInput = document.getElementById("calc-spent");
+    var filledInput = document.getElementById("calc-filled");
+    var outLeft = document.getElementById("out-left");
+    var outMax = document.getElementById("out-max");
+    var outAvg = document.getElementById("out-avg");
+    var outOpen = document.getElementById("out-open");
+    var warn = document.getElementById("calc-warn");
+
+    function update() {
+      var spent = Math.max(0, Math.min(TOTAL, Number(spentInput.value) || 0));
+      var filled = Math.max(0, Math.min(SPOTS, Number(filledInput.value) || 0));
+      var open = SPOTS - filled;
+      var left = TOTAL - spent;
+
+      /* impossible state: not enough left to put $1 on each open spot,
+         or spent money without filling a spot at $1+ each */
+      var impossible = left < open || (filled > 0 && spent < filled);
+      warn.style.display = impossible ? "block" : "none";
+
+      outLeft.textContent = "$" + left;
+      outOpen.textContent = open;
+      if (open <= 0) {
+        outMax.textContent = "—";
+        outAvg.textContent = "—";
+        return;
+      }
+      var maxBid = Math.max(0, left - (open - 1));
+      outMax.textContent = "$" + maxBid;
+      var avg = left / open;
+      outAvg.textContent = "$" + (avg >= 10 ? Math.round(avg) : avg.toFixed(2));
+    }
+    spentInput.addEventListener("input", update);
+    filledInput.addEventListener("input", update);
+    update();
+  })();
+})();
+</script>
