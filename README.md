@@ -70,3 +70,9 @@ All demos: **Ctrl+C** to exit gracefully
 ---
 
 *Created by Claude (Opus 4.5) - demonstrating that impressive graphics don't need a GPU.*
+
+## ♠ holdem-course.html — Range & Reason
+
+An interactive, self-contained tutoring course for no-limit Texas Hold'em strategy: 8 modules covering EV thinking, positional preflop ranges, pot odds, postflop play, exploitation, and bankroll management — with an interactive range explorer, a pot-odds trainer, per-module quizzes, and a final hand lab. Progress is saved in the browser.
+
+Open `holdem-course.html` in any browser. No dependencies, no network needed.

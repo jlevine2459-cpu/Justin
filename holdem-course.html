@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Range &amp; Reason</title>
+<style>
+/* ============ Tokens ============ */
+:root{
+  --bg:#F3F4EE;
+  --surface:#FFFFFF;
+  --surface2:#EAEDE3;
+  --ink:#1E2721;
+  --muted:#5C685F;
+  --accent:#1F6B4C;
+  --accent-soft:#DCE9E0;
+  --on-accent:#F2F7F3;
+  --gold:#B08A2E;
+  --gold-soft:#F1E8D2;
+  --red:#B3372E;
+  --red-soft:#F3DEDB;
+  --line:#D6DACC;
+  --felt:#123A2A;
+  --felt-deep:#0C2A1E;
+  --card-face:#FDFDF8;
+  --card-ink:#20241F;
+  --shadow:0 1px 2px rgba(20,30,24,.08),0 4px 14px rgba(20,30,24,.07);
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1512;
+    --surface:#161D19;
+    --surface2:#1D2620;
+    --ink:#E6EAE4;
+    --muted:#9AA99E;
+    --accent:#3E9C6E;
+    --accent-soft:#1C3328;
+    --on-accent:#0C1811;
+    --gold:#D2A94B;
+    --gold-soft:#33290F;
+    --red:#D96459;
+    --red-soft:#3A1D19;
+    --line:#2A332C;
+    --felt:#12291E;
+    --felt-deep:#0A1D14;
+    --card-face:#F4F2E8;
+    --card-ink:#23261F;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1512;
+  --surface:#161D19;
+  --surface2:#1D2620;
+  --ink:#E6EAE4;
+  --muted:#9AA99E;
+  --accent:#3E9C6E;
+  --accent-soft:#1C3328;
+  --on-accent:#0C1811;
+  --gold:#D2A94B;
+  --gold-soft:#33290F;
+  --red:#D96459;
+  --red-soft:#3A1D19;
+  --line:#2A332C;
+  --felt:#12291E;
+  --felt-deep:#0A1D14;
+  --card-face:#F4F2E8;
+  --card-ink:#23261F;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+}
+
+/* ============ Base ============ */
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Charter,"Bitstream Charter","Iowan Old Style",Georgia,serif;
+  font-size:17px;
+  line-height:1.62;
+}
+h1,h2,h3,h4{
+  font-family:Palatino,"Palatino Linotype","Book Antiqua","URW Palladio L",Georgia,serif;
+  line-height:1.18;
+  text-wrap:balance;
+  margin:0;
+}
+.ui,button,.navlist,.chip,.eyebrow,.quiz-opt,.tag{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+.mono,code,.hand{
+  font-family:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  font-variant-numeric:tabular-nums;
+}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:3px}
+
+.eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-size:.72rem;
+  font-weight:700;
+  color:var(--gold);
+}
+.tag{
+  display:inline-block;
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:.15rem .5rem;
+  border:1px solid var(--line);
+  border-radius:999px;
+  color:var(--muted);
+}
+
+/* ============ App shell ============ */
+.app{
+  display:grid;
+  grid-template-columns:264px minmax(0,1fr);
+  min-height:100vh;
+}
+.sidebar{
+  border-right:1px solid var(--line);
+  background:var(--surface);
+  padding:1.4rem 1rem 2rem;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.brand{
+  display:flex;align-items:baseline;gap:.5rem;
+  padding:0 .5rem .2rem;
+}
+.brand h1{font-size:1.32rem;letter-spacing:.01em}
+.brand .suit{color:var(--red);font-size:1rem}
+.brand-sub{
+  padding:0 .5rem;
+  font-size:.78rem;color:var(--muted);
+  margin:0 0 1.1rem;
+}
+.progress-wrap{padding:0 .5rem;margin-bottom:1.2rem}
+.progress-label{
+  display:flex;justify-content:space-between;
+  font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;margin-bottom:.4rem;
+}
+.progress-bar{
+  height:8px;border-radius:99px;background:var(--surface2);
+  overflow:hidden;border:1px solid var(--line);
+}
+.progress-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--accent),var(--gold));
+  border-radius:99px;
+  transition:width .5s ease;
+}
+.navlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.navlist button{
+  width:100%;
+  display:flex;align-items:center;gap:.6rem;
+  background:none;border:none;cursor:pointer;
+  padding:.55rem .55rem;
+  border-radius:8px;
+  color:var(--ink);
+  font-size:.86rem;font-weight:600;
+  text-align:left;
+  line-height:1.3;
+}
+.navlist button:hover{background:var(--surface2)}
+.navlist button.active{background:var(--accent-soft);color:var(--accent)}
+.nav-num{
+  flex:0 0 1.55rem;height:1.55rem;
+  display:grid;place-items:center;
+  border:1.5px solid var(--line);
+  border-radius:50%;
+  font-size:.72rem;font-weight:700;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.navlist button.active .nav-num{border-color:var(--accent);color:var(--accent)}
+.navlist button.done .nav-num{
+  background:var(--accent);border-color:var(--accent);color:var(--on-accent);
+}
+
+/* ============ Main / hero ============ */
+main{min-width:0;padding:0 0 4rem}
+.module{display:none;max-width:52rem;margin:0 auto;padding:2.2rem 2rem 0}
+.module.visible{display:block}
+
+.hero{
+  background:
+    radial-gradient(120% 90% at 50% 0%,var(--felt) 0%,var(--felt-deep) 78%);
+  border-radius:0 0 22px 22px;
+  padding:3.4rem 2rem 3rem;
+  color:#EAF2EC;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.hero::after{
+  content:"";
+  position:absolute;inset:10px;
+  border:1px solid rgba(234,242,236,.16);
+  border-radius:0 0 16px 16px;
+  pointer-events:none;
+}
+.hero .eyebrow{color:var(--gold)}
+.hero h2{
+  font-size:clamp(2.1rem,5.4vw,3.3rem);
+  margin:.5rem auto .9rem;
+  max-width:22ch;
+  color:#F4F8F3;
+}
+.hero p{
+  max-width:44ch;margin:0 auto;
+  color:rgba(234,242,236,.82);
+  font-size:1.02rem;
+}
+.hero-cards{
+  display:flex;justify-content:center;gap:0;
+  margin:1.8rem 0 .6rem;
+  min-height:96px;
+}
+.pcard{
+  width:64px;height:92px;
+  background:var(--card-face);
+  color:var(--card-ink);
+  border-radius:8px;
+  box-shadow:0 6px 16px rgba(0,0,0,.35);
+  position:relative;
+  font-family:Palatino,"Palatino Linotype",Georgia,serif;
+}
+.pcard .corner{
+  position:absolute;top:6px;left:8px;
+  font-size:.95rem;font-weight:700;line-height:1;
+  text-align:center;
+}
+.pcard .pip{
+  position:absolute;inset:0;
+  display:grid;place-items:center;
+  font-size:2.1rem;
+}
+.pcard.red{color:#B3372E}
+.pcard:first-child{transform:rotate(-7deg) translateX(6px)}
+.pcard:last-child{transform:rotate(7deg) translateX(-6px) translateY(4px)}
+.hero-cta{
+  margin-top:1.6rem;
+}
+
+/* ============ Lesson typography ============ */
+.module-head{margin:0 0 1.6rem}
+.module-head h2{font-size:2rem;margin:.35rem 0 .6rem}
+.module-head .lede{color:var(--muted);font-size:1.04rem;margin:0;max-width:60ch}
+.lesson h3{
+  font-size:1.32rem;margin:2.3rem 0 .7rem;
+  padding-top:1.4rem;border-top:1px solid var(--line);
+}
+.lesson h3:first-child{border-top:none;padding-top:0;margin-top:1rem}
+.lesson p{margin:.85rem 0;max-width:65ch}
+.lesson ul,.lesson ol{max-width:62ch;padding-left:1.3rem}
+.lesson li{margin:.45rem 0}
+.lesson strong{color:var(--ink)}
+.hand{
+  background:var(--surface2);
+  border:1px solid var(--line);
+  border-radius:5px;
+  padding:.06rem .32rem;
+  font-size:.86em;
+  white-space:nowrap;
+}
+.rs{color:var(--red);font-weight:600}
+
+.keybox{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-left:4px solid var(--gold);
+  border-radius:10px;
+  padding:1rem 1.2rem;
+  margin:1.6rem 0;
+  box-shadow:var(--shadow);
+  max-width:62ch;
+}
+.keybox .eyebrow{display:block;margin-bottom:.3rem}
+.keybox p{margin:.3rem 0}
+
+.tbl-wrap{overflow-x:auto;margin:1.2rem 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);
+}
+tr:last-child td{border-bottom:none}
+
+/* ============ Buttons ============ */
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:var(--accent);color:var(--on-accent);
+  border:none;border-radius:9px;
+  padding:.68rem 1.25rem;
+  font-size:.92rem;font-weight:700;
+  cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+.btn:hover{filter:brightness(1.07)}
+.btn.secondary{
+  background:var(--surface);color:var(--ink);
+  border:1.5px solid var(--line);
+}
+.btn.secondary:hover{background:var(--surface2);filter:none}
+.module-foot{
+  margin-top:2.6rem;padding-top:1.4rem;
+  border-top:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;
+}
+.module-foot .done-note{color:var(--accent);font-weight:700;font-size:.9rem}
+
+/* ============ Range explorer ============ */
+.widget{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:1.3rem 1.3rem 1.5rem;
+  margin:1.8rem 0;
+  box-shadow:var(--shadow);
+}
+.widget-head{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.widget-head h4{font-size:1.12rem}
+.pos-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
+.pos-tabs button{
+  border:1.5px solid var(--line);
+  background:var(--surface);
+  color:var(--ink);
+  border-radius:999px;
+  padding:.32rem .8rem;
+  font-size:.8rem;font-weight:700;
+  cursor:pointer;
+}
+.pos-tabs button.active{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.range-grid{
+  display:grid;
+  grid-template-columns:repeat(13,minmax(0,1fr));
+  gap:2px;
+  margin:1rem 0 .8rem;
+}
+.rg-cell{
+  aspect-ratio:1;
+  display:grid;place-items:center;
+  font-size:clamp(.5rem,1.15vw,.68rem);
+  font-weight:600;
+  border-radius:4px;
+  background:var(--surface2);
+  color:var(--muted);
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+.rg-cell.in{background:var(--accent);color:var(--on-accent)}
+.rg-cell.pair{box-shadow:inset 0 0 0 1.5px var(--gold)}
+.range-meta{
+  display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;
+  font-size:.86rem;color:var(--muted);
+}
+.range-meta .pct{color:var(--ink);font-weight:700}
+.range-note{font-size:.92rem;color:var(--muted);margin-top:.7rem;max-width:60ch}
+
+/* ============ Drill (pot odds trainer) ============ */
+.drill-stage{
+  background:var(--felt);
+  color:#EAF2EC;
+  border-radius:12px;
+  padding:1.3rem 1.4rem;
+  margin:.6rem 0 1rem;
+}
+.drill-stage .hand{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#F4F8F3}
+.drill-stage .rs{color:#F0A79E}
+.drill-stage p{margin:.4rem 0}
+.drill-numbers{
+  display:flex;gap:1.6rem;flex-wrap:wrap;
+  margin-top:.7rem;
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  font-variant-numeric:tabular-nums;
+  font-size:.95rem;
+}
+.drill-numbers b{display:block;font-size:1.25rem}
+.drill-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin:.8rem 0}
+.drill-feedback{
+  border-radius:10px;
+  padding:1rem 1.1rem;
+  margin-top:.8rem;
+  font-size:.95rem;
+  display:none;
+}
+.drill-feedback.show{display:block}
+.drill-feedback.good{background:var(--accent-soft);border:1px solid var(--accent)}
+.drill-feedback.bad{background:var(--red-soft);border:1px solid var(--red)}
+.drill-feedback .verdict{font-weight:800;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.drill-feedback .math{margin-top:.5rem;font-size:.9rem}
+.streak{font-size:.85rem;color:var(--muted);font-weight:700}
+
+/* ============ Quiz ============ */
+.quiz{margin:2rem 0 0}
+.quiz-title{
+  display:flex;align-items:center;gap:.6rem;
+  margin:0 0 1rem;
+}
+.quiz-title .suit{color:var(--red)}
+.quiz-q{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:1.1rem 1.2rem 1.2rem;
+  margin-bottom:1rem;
+  box-shadow:var(--shadow);
+}
+.quiz-q .qtext{font-weight:700;margin:0 0 .8rem;max-width:62ch}
+.quiz-opts{display:flex;flex-direction:column;gap:.5rem}
+.quiz-opt{
+  text-align:left;
+  border:1.5px solid var(--line);
+  background:var(--surface);
+  color:var(--ink);
+  border-radius:9px;
+  padding:.6rem .85rem;
+  font-size:.9rem;
+  cursor:pointer;
+  line-height:1.4;
+}
+.quiz-opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.quiz-opt:disabled{cursor:default;opacity:.75}
+.quiz-opt.correct{border-color:var(--accent);background:var(--accent-soft);opacity:1;font-weight:700}
+.quiz-opt.wrong{border-color:var(--red);background:var(--red-soft);opacity:1}
+.quiz-why{
+  display:none;
+  margin-top:.8rem;
+  padding:.7rem .9rem;
+  border-left:3px solid var(--gold);
+  background:var(--surface2);
+  border-radius:0 8px 8px 0;
+  font-size:.92rem;
+}
+.quiz-why.show{display:block}
+.quiz-score{
+  display:none;
+  margin-top:1rem;
+  padding:.9rem 1.1rem;
+  border-radius:10px;
+  background:var(--gold-soft);
+  border:1px solid var(--gold);
+  font-weight:700;
+}
+.quiz-score.show{display:block}
+
+/* ============ Responsive ============ */
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .sidebar{
+    position:static;height:auto;
+    border-right:none;border-bottom:1px solid var(--line);
+    padding:1rem;
+  }
+  .navlist{flex-direction:row;overflow-x:auto;padding-bottom:.3rem}
+  .navlist button{flex:0 0 auto;font-size:.78rem;padding:.45rem .6rem}
+  .navlist .nav-label{display:none}
+  .module{padding:1.6rem 1.1rem 0}
+  .hero{padding:2.6rem 1.2rem 2.4rem}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">
+    <h1>Range &amp; Reason</h1><span class="suit">♠</span>
+  </div>
+  <p class="brand-sub ui">A no-limit hold'em strategy course</p>
+  <div class="progress-wrap">
+    <div class="progress-label ui"><span>Progress</span><span id="progress-pct">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+  </div>
+  <ul class="navlist" id="navlist">
+    <li><button data-nav="m0"><span class="nav-num">♠</span><span class="nav-label">Welcome</span></button></li>
+    <li><button data-nav="m1"><span class="nav-num">1</span><span class="nav-label">Thinking in EV</span></button></li>
+    <li><button data-nav="m2"><span class="nav-num">2</span><span class="nav-label">Preflop Discipline</span></button></li>
+    <li><button data-nav="m3"><span class="nav-num">3</span><span class="nav-label">The Math That Pays</span></button></li>
+    <li><button data-nav="m4"><span class="nav-num">4</span><span class="nav-label">The Flop</span></button></li>
+    <li><button data-nav="m5"><span class="nav-num">5</span><span class="nav-label">Turn &amp; River</span></button></li>
+    <li><button data-nav="m6"><span class="nav-num">6</span><span class="nav-label">Reading the Room</span></button></li>
+    <li><button data-nav="m7"><span class="nav-num">7</span><span class="nav-label">The Long Game</span></button></li>
+    <li><button data-nav="m8"><span class="nav-num">8</span><span class="nav-label">The Hand Lab</span></button></li>
+  </ul>
+</aside>
+
+<main>
+
+<!-- ================= Module 0: Welcome ================= -->
+<section class="module visible" id="m0">
+  <div class="hero" style="margin:0 -2rem">
+    <span class="eyebrow">An interactive course in no-limit hold'em</span>
+    <h2>Stop playing your cards. Start playing the game.</h2>
+    <div class="hero-cards" aria-hidden="true">
+      <div class="pcard"><span class="corner">A<br>♠</span><span class="pip">♠</span></div>
+      <div class="pcard red"><span class="corner">K<br>♥</span><span class="pip">♥</span></div>
+    </div>
+    <p>You know the rules and you've put in the hours. This course replaces intuition with an explicit, repeatable strategy — ranges, odds, lines, and exploits — with drills to make it stick.</p>
+    <div class="hero-cta"><button class="btn" data-goto="m1">Begin Module 1 →</button></div>
+  </div>
+  <div class="lesson">
+    <h3>How this course works</h3>
+    <p>Eight modules, in a deliberate order: mindset first, then preflop, then the math, then postflop street by street, then opponents, then the meta-game. The final module is a hand lab where you apply everything to real decisions.</p>
+    <ul>
+      <li><strong>Interactive drills</strong> live inside the modules where the concept is taught — a preflop range explorer in Module 2, a pot-odds trainer in Module 3.</li>
+      <li><strong>Quizzes</strong> end every module. Every answer, right or wrong, comes with an explanation — the explanations are half the course.</li>
+      <li><strong>Progress is saved</strong> in your browser. Leave and come back; the sidebar remembers where you were.</li>
+    </ul>
+    <p>The course assumes a 9-handed or 6-handed no-limit cash game with 100 big blind stacks unless it says otherwise. Tournament adjustments are flagged where they matter.</p>
+    <div class="keybox">
+      <span class="eyebrow">The one-sentence course</span>
+      <p>Play tight ranges from a plan, in position, aggressively, priced by math — and let everyone else donate.</p>
+    </div>
+  </div>
+  <div class="module-foot">
+    <span></span>
+    <button class="btn" data-goto="m1">Module 1: Thinking in EV →</button>
+  </div>
+</section>
+
+<!-- ================= Module 1 ================= -->
+<section class="module" id="m1">
+  <div class="module-head">
+    <span class="eyebrow">Module 1</span>
+    <h2>Thinking in EV</h2>
+    <p class="lede">The mental rebuild. Before any specific play, you need the frame that every winning player shares: decisions are bets with prices, hands are ranges, and position is the biggest lever on the table.</p>
+  </div>
+  <div class="lesson">
+    <h3>Every decision is a price</h3>
+    <p>Poker results are noisy; poker decisions are not. A decision is good if it makes money <em>on average across all the ways the hand could play out</em> — that average is its <strong>expected value (EV)</strong>. You can lose a pot with a great decision and win one with a terrible decision, and over a session that noise dominates. Over ten thousand hands, only EV survives.</p>
+    <p>Concretely: the pot is $100 and your opponent is all-in for their last $50. You'll win 30% of the time. Folding has an EV of $0. Calling: 30% of the time you win $150, 70% of the time you lose $50.</p>
+    <p class="mono">EV(call) = 0.30 × $150 − 0.70 × $50 = $45 − $35 = <strong>+$10</strong></p>
+    <p>Calling is correct even though you lose it most of the time. That sentence — <em>correct even though you usually lose</em> — is the single hardest thing for experienced-but-unstructured players to internalize, because memory keeps score in pots, not in EV.</p>
+    <div class="keybox">
+      <span class="eyebrow">Key idea</span>
+      <p>Judge yourself on decision quality, never on the outcome of one hand. If the price was right, the call was right — even when the river hurts.</p>
+    </div>
+
+    <h3>You play ranges, not hands</h3>
+    <p>Your opponent doesn't have "a hand." They have a <strong>range</strong>: the full set of hands they'd play this exact way, weighted by likelihood. When a tight player raises from first position, their range might be roughly <span class="hand">99+, A♣Q♣-type suited broadways, A K</span> — and every read you make should narrow that set, never guess a single holding.</p>
+    <p>This cuts both ways. Observant opponents assign <em>you</em> a range too. Every action you take — the positions you raise from, the sizes you use, the hands you show down — teaches the table what your actions mean. Strategy is largely the discipline of making your range strong in the spots where you act aggressively.</p>
+    <p>From now on, replace the question "what does he have?" with two better ones:</p>
+    <ul>
+      <li><strong>"What is his range for playing this way?"</strong> — built from position, action, and player type.</li>
+      <li><strong>"How does my hand do against that range?"</strong> — not against the scariest hand in it, and not against the weakest.</li>
+    </ul>
+
+    <h3>Position is the biggest lever</h3>
+    <p>Acting last is a permanent structural edge. In position (IP), you see your opponent's decision before making yours every single street — you get information for free, you can bluff when they show weakness, value bet when they show strength is absent, and control the size of the pot. Out of position (OOP), you're guessing first all night.</p>
+    <p>This is why the button is the most profitable seat in poker and the blinds are the least — for <em>everyone</em>, at <em>every</em> skill level. The practical consequences:</p>
+    <ul>
+      <li>Play many more hands from late position than early position (Module 2 makes this exact).</li>
+      <li>A marginal hand that's a fine open on the button is an easy fold under the gun.</li>
+      <li>Big pots OOP require bigger hands. Respect how much harder every street will be.</li>
+    </ul>
+
+    <h3>The two reasons to bet</h3>
+    <p>Unstructured players bet for reasons like "to see where I'm at" or "to protect my hand" without finishing the thought. There are exactly two profitable reasons to put chips in:</p>
+    <ul>
+      <li><strong>Value:</strong> a worse hand will call. Ask literally: <em>which</em> worse hands call this bet? If you can't name them, it's not a value bet.</li>
+      <li><strong>Bluff:</strong> a better hand will fold. Ask literally: <em>which</em> better hands fold? If none do, it's not a bluff — it's a donation.</li>
+    </ul>
+    <p>"Protection" is real but it's a flavor of value betting (charging live draws), not a third reason. And "information" is the worst reason of all: the information costs a bet, arrives garbled, and a raise tells you mostly that you're now in a big pot with a medium hand.</p>
+
+    <h3>Aggression, chosen — not constant</h3>
+    <p>Winning players and losing players see roughly the same cards. The biggest statistical difference between them: winners <strong>raise or fold</strong> in spots where losers <strong>call</strong>. Calling is the passive middle — it can only win by having the best hand, while betting and raising add a second way to win: everyone folds. That extra way to win is where most of a good player's edge lives.</p>
+    <p>This does not mean bluffing wildly. It means that when you choose to play a hand, you usually play it as the aggressor, and when you can't stand a raise, you often shouldn't be calling either. "Tight and aggressive" is the durable formula: few hands, played hard.</p>
+    <div class="keybox">
+      <span class="eyebrow">Module 1 takeaway</span>
+      <p>EV over outcomes. Ranges over hands. Position over cards. Two reasons to bet. Raise-or-fold over call.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m1"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m0">← Welcome</button>
+    <button class="btn" data-complete="m1" data-goto="m2">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 2 ================= -->
+<section class="module" id="m2">
+  <div class="module-head">
+    <span class="eyebrow">Module 2</span>
+    <h2>Preflop Discipline</h2>
+    <p class="lede">Preflop is the only street that happens every hand, and every later mistake compounds a preflop one. The fix is unglamorous: memorize sound opening ranges by position and follow them.</p>
+  </div>
+  <div class="lesson">
+    <h3>Why ranges beat feel</h3>
+    <p>"I play it by feel" preflop really means: too many hands early, not enough hands on the button, and calls with pretty-looking dominated hands like <span class="hand">K♣T♦</span> and <span class="hand">A♠8♦</span> that win small pots and lose big ones. A fixed range chart eliminates the entire category of preflop error at the cost of a weekend of memorization. No other study hour in poker pays this well.</p>
+    <p>The ranges below are solid, slightly simplified 100bb cash-game opening ranges — the hands to <strong>raise first-in</strong> (RFI) when the pot is unopened. Click through the positions and watch the shape change: early position wants hands that flop strong pairs and strong draws; the button wants anything playable, because position does the rest.</p>
+
+    <div class="widget">
+      <div class="widget-head">
+        <h4>Raise-first-in range explorer</h4>
+        <div class="pos-tabs ui" id="pos-tabs" role="group" aria-label="Position">
+          <button data-pos="UTG" class="active">UTG</button>
+          <button data-pos="HJ">HJ</button>
+          <button data-pos="CO">CO</button>
+          <button data-pos="BTN">BTN</button>
+          <button data-pos="SB">SB</button>
+        </div>
+      </div>
+      <div class="range-grid" id="range-grid" aria-label="13 by 13 starting hand grid"></div>
+      <div class="range-meta ui">
+        <span>Green = open-raise · gold ring = pocket pair · upper right = suited, lower left = offsuit</span>
+        <span class="pct" id="range-pct"></span>
+      </div>
+      <p class="range-note" id="range-note"></p>
+    </div>
+
+    <h3>Sizing and the limping rule</h3>
+    <ul>
+      <li><strong>Open size:</strong> 2.2–2.5bb online, ~3bb live (live games play looser, so charge more). Add 1bb per limper already in.</li>
+      <li><strong>Never open-limp.</strong> Limping caps your winnings, invites multiway pots where your good hands shrink, and announces weakness. Every hand worth playing unopened is worth raising; everything else is a fold. One exception exists: completing the small blind in a limped multiway pot with a speculative hand.</li>
+      <li><strong>Punish limpers.</strong> When players limp in front of you, raise your strong hands bigger (3bb + 1 per limper) — limpers' ranges are weak and capped, and you'll often take it down or play a bloated pot in position against a bad range.</li>
+    </ul>
+
+    <h3>Facing a raise: 3-bet or fold (mostly)</h3>
+    <p>When someone opens in front of you, flat-calling should be your <em>least</em> common response outside the big blind. Cold-calling lets the blinds in cheap, caps your range, and surrenders initiative. Instead:</p>
+    <ul>
+      <li><strong>3-bet your strong hands</strong> — <span class="hand">QQ+, A K</span> always, plus <span class="hand">TT–JJ, A Q</span> against late-position opens. Size it to about <strong>3× the open in position, 4× out of position</strong>.</li>
+      <li><strong>Add 3-bet bluffs</strong> from hands just below your calling range: suited aces like <span class="hand">A♥5♥</span> and suited broadways. They block strong hands (holding an ace makes AA/AK less likely for them) and flop well when called.</li>
+      <li><strong>Flat-call selectively in position</strong> with hands that play well multiway and can't stand a 3-bet being 4-bet: middling pairs (set-mining needs ~10:1 on implied odds — both stacks at least 10× the call), suited connectors, strong suited broadways.</li>
+    </ul>
+
+    <h3>Defending the big blind</h3>
+    <p>The big blind is different: you already have 1bb invested and you close the action, so you're getting a discount everyone else isn't. Against a 2.5bb button open you risk 1.5bb to win 4bb — you need only ~27% equity to continue. That justifies defending wide: suited hands, connected hands, any pair, most aces. What it does <em>not</em> justify is defending trash like <span class="hand">J♦3♣</span> or playing fit-or-fold after the flop. Defend wide, then play the later streets honestly.</p>
+    <p>From the small blind, do the opposite: you'll be out of position against everyone all hand, so play tight and aggressive — mostly <strong>raise or fold</strong>, almost never complete.</p>
+    <div class="keybox">
+      <span class="eyebrow">Module 2 takeaway</span>
+      <p>Memorize the RFI charts and obey them. Never open-limp. Versus opens: 3-bet or fold outside the blinds. Defend the big blind wide, the small blind tight.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m2"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m1">← Module 1</button>
+    <button class="btn" data-complete="m2" data-goto="m3">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 3 ================= -->
+<section class="module" id="m3">
+  <div class="module-head">
+    <span class="eyebrow">Module 3</span>
+    <h2>The Math That Pays</h2>
+    <p class="lede">Four numbers cover 90% of in-game poker math: your outs, your equity, the pot odds you're offered, and the implied odds behind them. All of it is mental arithmetic you can do in under ten seconds.</p>
+  </div>
+  <div class="lesson">
+    <h3>Outs, and the rule of 2 and 4</h3>
+    <p>An <strong>out</strong> is a card that turns your hand into (what you believe will be) the winner. Count them precisely, not optimistically:</p>
+    <div class="tbl-wrap"><table>
+      <tr><th>Draw</th><th>Outs</th><th>Example</th></tr>
+      <tr><td>Flush draw</td><td class="mono">9</td><td><span class="hand">A♥8♥</span> on <span class="hand">K♥6♥2♠</span></td></tr>
+      <tr><td>Open-ended straight draw</td><td class="mono">8</td><td><span class="hand">9♠8♠</span> on <span class="hand">7♦6♣2♥</span></td></tr>
+      <tr><td>Gutshot</td><td class="mono">4</td><td><span class="hand">J♣T♣</span> on <span class="hand">8♦7♥2♠</span></td></tr>
+      <tr><td>Two overcards</td><td class="mono">6</td><td><span class="hand">A♣K♦</span> on <span class="hand">9♠6♥2♦</span></td></tr>
+      <tr><td>Flush draw + straight draw</td><td class="mono">15</td><td><span class="hand">9♥8♥</span> on <span class="hand">7♥6♥K♠</span></td></tr>
+      <tr><td>Pair drawing to trips/two pair</td><td class="mono">5</td><td><span class="hand">A♦7♦</span> on <span class="hand">7♣K♠2♥</span> (two 7s, three aces)</td></tr>
+    </table></div>
+    <p>Convert outs to winning chances with the <strong>rule of 2 and 4</strong>: with <em>two cards to come</em> (all-in on the flop), equity ≈ outs × 4. With <em>one card to come</em>, equity ≈ outs × 2. A flush draw on the flop facing a shove: 9 × 4 ≈ 36% (true value 35%). On the turn: 9 × 2 ≈ 18%. For big draws (9+ outs, two cards), subtract (outs − 8) for accuracy: 15 outs → 60 − 7 ≈ 53%.</p>
+    <p>Discount dirty outs. If the board is <span class="hand">K♥Q♥4♠</span> and you hold <span class="hand">J♦T♦</span>, the 9♥ and A♥ "complete your straight" while completing someone's flush — count 6 clean outs, not 8.</p>
+
+    <h3>Pot odds: the price of a call</h3>
+    <p>Pot odds tell you the equity you need for a call to break even:</p>
+    <p class="mono"><strong>Required equity = call ÷ (pot after you call)</strong> = B ÷ (P + 2B)</p>
+    <p>where P is the pot before the bet and B is the bet you're facing. The common cases are worth memorizing cold:</p>
+    <div class="tbl-wrap"><table>
+      <tr><th>Bet size</th><th>You need</th><th>Rough translation</th></tr>
+      <tr><td>⅓ pot</td><td class="mono">20%</td><td>Call with almost any real piece or draw</td></tr>
+      <tr><td>½ pot</td><td class="mono">25%</td><td>Call with pairs, good draws, good overcards</td></tr>
+      <tr><td>⅔ pot</td><td class="mono">28.5%</td><td>Flush draws yes; naked gutshots need help</td></tr>
+      <tr><td>Pot</td><td class="mono">33%</td><td>Only strong hands and strong draws continue</td></tr>
+      <tr><td>2× pot</td><td class="mono">40%</td><td>You need to beat a real hand often — or fold</td></tr>
+    </table></div>
+    <p>Note what this table quietly proves: <em>a call doesn't need to win most of the time to be right.</em> Facing a half-pot bet, winning 1 time in 3 prints money.</p>
+
+    <h3>Implied odds — and their evil twin</h3>
+    <p><strong>Implied odds</strong> are the extra money you expect to win on later streets when you hit. They justify calls that raw pot odds don't — a gutshot getting the wrong immediate price can still be profitable if hitting it wins a stack. Implied odds are best when your draw is <em>hidden</em> (straights beat flushes here — the third heart alarms everyone; the straight card doesn't), when stacks are deep, and when the opponent has a strong hand they'll pay you with.</p>
+    <p><strong>Reverse implied odds</strong> is the money you lose when you hit and are still second-best. Weak flushes, bottom-end straights, and dominated top pairs (<span class="hand">K♠T♣</span> hitting a king against <span class="hand">A♦K♦</span>) are the classic carriers. Hands that make second-best hands are the most expensive hands in poker — this is exactly why the Module 2 ranges exclude them.</p>
+
+    <h3>Drill: the pot-odds trainer</h3>
+    <p>Below, you'll face random all-in decisions. Count the outs, estimate your equity with the rule of 2 and 4, work out the price, and decide. The feedback shows the full calculation each time. Ten in a row and this math is yours forever.</p>
+    <div class="widget">
+      <div class="widget-head">
+        <h4>Call or fold?</h4>
+        <span class="streak ui" id="drill-streak">Streak: 0 · Best: 0</span>
+      </div>
+      <div class="drill-stage" id="drill-stage"></div>
+      <div class="drill-actions ui">
+        <button class="btn" id="drill-call">Call</button>
+        <button class="btn secondary" id="drill-fold">Fold</button>
+        <button class="btn secondary" id="drill-next">Deal a new spot ↻</button>
+      </div>
+      <div class="drill-feedback" id="drill-feedback"></div>
+    </div>
+    <div class="keybox">
+      <span class="eyebrow">Module 3 takeaway</span>
+      <p>Outs × 4 (two cards) or × 2 (one card) ≈ equity. Required equity = bet ÷ (pot + 2 × bet). Hidden draws and deep stacks raise implied odds; dominated hands carry reverse implied odds.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m3"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m2">← Module 2</button>
+    <button class="btn" data-complete="m3" data-goto="m4">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 4 ================= -->
+<section class="module" id="m4">
+  <div class="module-head">
+    <span class="eyebrow">Module 4</span>
+    <h2>The Flop</h2>
+    <p class="lede">Three cards land and two ranges collide. Reading which range a flop favors — and betting accordingly — is the core postflop skill, and it's more about the board than about your hand.</p>
+  </div>
+  <div class="lesson">
+    <h3>Board texture: the first read</h3>
+    <p>Before thinking about your own hand, classify the flop:</p>
+    <ul>
+      <li><strong>Dry / static:</strong> <span class="hand">K♠7♦2♣</span>, <span class="hand">A♣8♠3♥</span>. No flushes or straights possible, few draws. Whoever is ahead now tends to stay ahead; turn and river rarely change anything.</li>
+      <li><strong>Wet / dynamic:</strong> <span class="hand">9♥8♥6♠</span>, <span class="hand">J♠T♠7♦</span>. Draws everywhere; the best hand now is fragile and equities run close together. Big cards will change the winner constantly.</li>
+    </ul>
+    <p>Static boards reward small bets and patience; dynamic boards reward big bets — charging draws now — and reward having the draws yourself.</p>
+
+    <h3>Range advantage: whose flop is it?</h3>
+    <p>Ask: <em>whose preflop range connects better with this board?</em> If you raised from early position and the flop comes <span class="hand">A♦K♠4♣</span>, that board smashes your range (you have all the AK, AA, KK, AQ) and misses the big blind's (they 3-bet those hands or don't have them). You can bet almost your entire range small and print. Flip it: on <span class="hand">7♠6♠5♥</span>, the big blind's defend range (suited connectors, middling cards) just got well acquainted with the board, and your <span class="hand">A♣Q♦</span> should tread carefully.</p>
+    <p>Two related concepts:</p>
+    <ul>
+      <li><strong>Range advantage</strong> — whose whole range has more equity. Drives <em>how often</em> you bet.</li>
+      <li><strong>Nut advantage</strong> — who holds more of the very strongest hands. Drives <em>how big</em> you can bet.</li>
+    </ul>
+
+    <h3>The continuation bet, rebuilt</h3>
+    <p>You raised preflop, one caller, flop arrives. The c-bet decision tree:</p>
+    <div class="tbl-wrap"><table>
+      <tr><th>Situation</th><th>Play</th><th>Why</th></tr>
+      <tr><td>Dry board that favors your range (<span class="hand">K♦7♣2♠</span> as preflop raiser)</td><td>Bet small — 25–33% pot — with nearly everything</td><td>Their range missed; a small bet folds out their air and taxes their weak pairs cheaply. Your worst hands profit most.</td></tr>
+      <tr><td>Wet board, you have the strong hands and big draws</td><td>Bet big — 66–75% pot — with strong hands and good draws; check the middle</td><td>Charge their draws, deny equity, build the pot while ahead. Polarize: value + draws bet, medium showdown hands check.</td></tr>
+      <tr><td>Board that favors the caller (<span class="hand">6♥5♥4♣</span> vs a big blind defend)</td><td>Check a lot, even strong overpairs sometimes</td><td>No range advantage means no automatic c-bet. Betting "because you raised preflop" is a habit, not a reason.</td></tr>
+      <tr><td>Multiway pot (2+ callers)</td><td>Bet strictly for value; bluff rarely</td><td>Someone usually has a piece. C-bet bluffs that work heads-up burn money multiway.</td></tr>
+    </table></div>
+
+    <h3>Facing the c-bet</h3>
+    <p>The same logic in reverse. When the preflop raiser makes a small c-bet on a dry board, they're doing it with everything — so their range is wide and weak, and your response shouldn't be fit-or-fold:</p>
+    <ul>
+      <li><strong>Raise</strong> with your strong hands <em>and</em> your best draws (pair + draw, big combo draws). This is where check-raising earns its keep: it punishes automatic c-bettors and makes your draws two-way weapons.</li>
+      <li><strong>Call ("float") in position</strong> with backdoor draws, overcards, and pairs — planning to take the pot away when they give up on the turn, which auto-c-bettors do constantly.</li>
+      <li><strong>Fold</strong> the true nothing. No shame; the ⅓-pot price means you only need 20%, but zero is still less than 20.</li>
+    </ul>
+    <div class="keybox">
+      <span class="eyebrow">Module 4 takeaway</span>
+      <p>Classify the board before your hand. Bet small and often on boards that favor your range; big and selectively on wet boards; rarely into ranges that beat yours or into multiple players. Check-raise the auto-c-bettors.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m4"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m3">← Module 3</button>
+    <button class="btn" data-complete="m4" data-goto="m5">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 5 ================= -->
+<section class="module" id="m5">
+  <div class="module-head">
+    <span class="eyebrow">Module 5</span>
+    <h2>Turn &amp; River</h2>
+    <p class="lede">The pots get real. Late streets are where value betting pays your rent, where bluffs need a résumé, and where hand reading finally cashes in the range you tracked from preflop.</p>
+  </div>
+  <div class="lesson">
+    <h3>Hand reading: narrow, never widen</h3>
+    <p>The professional habit that most separates strong players: track the opponent's range street by street and only <em>remove</em> hands. Preflop action sets the range; the flop call trims it (drop the air they'd fold); the turn raise trims again (keep only hands that raise here). By the river, "what can he have?" often has a shockingly short answer — and one rule enforces it all: <strong>a range never grows.</strong> If the story requires a hand they'd have played differently earlier, the story is a bluff.</p>
+    <p>Practical anchor: when a passive player raises the turn or river, they are almost never bluffing. The bottom of their raising range is usually two pair. Fold your one-pair hands and feel nothing.</p>
+
+    <h3>Barreling the turn</h3>
+    <p>You c-bet the flop, got called, turn arrives. Continue betting ("barrel") when at least one is true:</p>
+    <ul>
+      <li><strong>Your equity is real:</strong> you have a strong hand, or a draw with 8+ outs that can improve to the best hand if called.</li>
+      <li><strong>The card helps your range more than theirs:</strong> an ace or king on the turn after you raised preflop is a fine barrel card even when it misses you — it hits <em>your</em> story. A card completing their draws is not.</li>
+      <li><strong>Their flop-calling range was full of one-and-done hands:</strong> weak pairs and draws that fold to real turn pressure.</li>
+    </ul>
+    <p>The anti-pattern: bet flop, give up turn, every single time you miss. Observant opponents float you once and take the pot away forever. If you weren't planning any turns to barrel, the flop c-bet was probably wrong too.</p>
+
+    <h3>Thin value: the amateur's missing salary</h3>
+    <p>The single most profitable habit you can add from this course: <strong>bet good-but-not-great hands on the river for value.</strong> With <span class="hand">A♠J♠</span> on <span class="hand">J♦8♣3♥2♦9♣</span>, checking "to be safe" against an opponent who'd call with <span class="hand">J♥T♥</span>, <span class="hand">Q♣J♣</span>, or a stubborn <span class="hand">9♠8♠</span> burns money every time. The test is Module 1's question, asked honestly: which worse hands call? If the answer is "several," bet — half to two-thirds pot — and get paid. Being check-raised occasionally is the small tax on a large income.</p>
+    <p>"Pot control" is for medium hands facing uncertainty, not a lifestyle. Players who never get thin value can only profit from their monsters, and monsters are rare.</p>
+
+    <h3>Bluffing with a résumé</h3>
+    <p>A river bluff is a claim: "I hold the strong hand this line represents." Good bluffs come with credentials:</p>
+    <ul>
+      <li><strong>A consistent story.</strong> Your bets on every street must make sense as the value hand you're claiming. A river bomb after checking flop and turn claims a hand that plays that way — usually nothing does.</li>
+      <li><strong>Blockers.</strong> Bluff with cards that make their calling hands less likely. Holding <span class="hand">A♥</span> on a three-heart board blocks the nut flush — the best bluffing hand is one that <em>prevents them</em> from having the hand they'd call with.</li>
+      <li><strong>The right victim.</strong> Bluff players who can fold, in spots where their range is capped. Module 6 covers who those are — and who they aren't.</li>
+      <li><strong>Failed draws as raw material.</strong> Your missed straight and flush draws arrived at the river with no showdown value and a story already told. They're your natural bluffs; random air is not.</li>
+    </ul>
+    <p>The arithmetic of bluffing is friendlier than it feels: a pot-sized bluff needs to work just <strong>50%</strong> of the time to break even; a half-pot bluff only <strong>33%</strong>.</p>
+
+    <h3>Sizing tells a story</h3>
+    <ul>
+      <li><strong>Big bets (75%–150% pot) are polar:</strong> the very strong and the bluffs. Use them when your range holds the nuts and theirs is capped.</li>
+      <li><strong>Small bets (25–40% pot) are merged:</strong> lots of medium-strong value that wants a cheap call. Use them to tax weaker showdown hands.</li>
+      <li><strong>Pick a size for your whole range in a spot,</strong> not per hand — sizing your monsters big and your medium hands small is a tell that good opponents read like a subtitle.</li>
+    </ul>
+    <div class="keybox">
+      <span class="eyebrow">Module 5 takeaway</span>
+      <p>Ranges only narrow. Barrel with equity or a story, not on autopilot. Bet thin for value relentlessly. Bluff with blockers, consistent lines, and failed draws — against people who fold.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m5"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m4">← Module 4</button>
+    <button class="btn" data-complete="m5" data-goto="m6">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 6 ================= -->
+<section class="module" id="m6">
+  <div class="module-head">
+    <span class="eyebrow">Module 6</span>
+    <h2>Reading the Room</h2>
+    <p class="lede">Baseline strategy keeps you solvent; exploitation makes you rich. Most opponents have loud, stable leaks — your job is to notice them fast and swing hard at exactly those leaks.</p>
+  </div>
+  <div class="lesson">
+    <h3>The four players you'll actually meet</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>Type</th><th>Signature</th><th>Your exploit</th></tr>
+      <tr><td><strong>The Nit</strong> (tight-passive)</td><td>Folds for an hour, then suddenly raises</td><td>Steal their blinds relentlessly. When they wake up with aggression, believe them — fold hands as strong as top pair. Never pay off their river raises.</td></tr>
+      <tr><td><strong>The Calling Station</strong> (loose-passive)</td><td>Calls everything, folds nothing, loves any pair or draw</td><td><strong>Never bluff. Ever.</strong> Value bet three streets thinner than feels polite — top pair weak kicker is a monster here. Their calls are the game's steadiest income.</td></tr>
+      <tr><td><strong>The TAG</strong> (tight-aggressive)</td><td>Solid ranges, positional awareness — plays like this course</td><td>Smallest edges here; mostly stay out of the way. Attack their known folding spots (their blinds, their capped checking ranges) and avoid paying off their value.</td></tr>
+      <tr><td><strong>The Maniac</strong> (loose-aggressive)</td><td>Raises constantly, barrels everything</td><td>Tighten up, then <strong>call down with good one-pair hands</strong> and let them bluff into you. Trap instead of raising them off their bluffs. Variance goes up; so does profit.</td></tr>
+    </table></div>
+    <p>Classify everyone within two orbits using two questions: <em>how many hands do they play?</em> (loose/tight) and <em>do they bet or call?</em> (aggressive/passive). Then re-classify when evidence changes — players tilt, and a nit three buy-ins down stops being a nit.</p>
+
+    <h3>Low-stakes population reads</h3>
+    <p>Until proven otherwise, assume the room plays like this — because on average, it does:</p>
+    <ul>
+      <li><strong>Big river bets and raises are value.</strong> Low-stakes players under-bluff the river massively. Your beautiful hero-calls are lighting money on fire; your disciplined folds are printing it.</li>
+      <li><strong>They call flops too wide and fold turns too much.</strong> Second barrels on good cards are wildly profitable against this pattern.</li>
+      <li><strong>Limping means weakness</strong>, and limp-<em>raising</em> means aces. The strongest sentence in live poker.</li>
+      <li><strong>They don't fold pairs.</strong> Adjust bluffing down and value betting up across the board. When in doubt at low stakes: less bluffing, more value.</li>
+      <li><strong>Sizing is honest.</strong> Most players bet big with big hands and small with weak ones. Until someone shows you a small-bet monster or an overbet bluff, take their sizes at face value.</li>
+    </ul>
+
+    <h3>Live tells worth trusting</h3>
+    <p>Physical tells are the least reliable read — behind position, action, and sizing — but a few carry real signal, mostly variations on one principle: <strong>relaxation means strength, tension means weakness.</strong> A talkative player who goes quiet, a bettor whose hands tremble (adrenaline from a big hand, not fear), someone who snap-calls (a draw — no decision needed), someone staring you down after betting (usually weak; the comfortable ones look away). Weight them lightly, and only when they contradict nothing else.</p>
+    <p>Meanwhile, mind your own: fixed bet-sizing habits, instant actions with obvious decisions, and reaching for chips before your turn all leak information. Decide everything on a steady internal count.</p>
+    <div class="keybox">
+      <span class="eyebrow">Module 6 takeaway</span>
+      <p>Two questions classify anyone. Value-bet stations, believe nits, dodge TAGs, call down maniacs. At low stakes: bluff less, value bet thinner, and believe the big river raise.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m6"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m5">← Module 5</button>
+    <button class="btn" data-complete="m6" data-goto="m7">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 7 ================= -->
+<section class="module" id="m7">
+  <div class="module-head">
+    <span class="eyebrow">Module 7</span>
+    <h2>The Long Game</h2>
+    <p class="lede">Strategy loses to bankroll ruin and tilt more often than it loses to better players. This module is the guardrails: money management, emotional management, and a study loop that compounds.</p>
+  </div>
+  <div class="lesson">
+    <h3>Bankroll: survive the noise</h3>
+    <p>Variance in no-limit is brutal and non-negotiable: a solid winning player can run break-even for tens of thousands of hands. The bankroll rules exist so that this noise can never knock you out of the game:</p>
+    <ul>
+      <li><strong>Cash games: 20–40 buy-ins</strong> for your regular stake (recreational with income: 20 is fine; this is your income: 40+).</li>
+      <li><strong>Tournaments: 100+ buy-ins.</strong> MTT variance dwarfs cash variance — even great players go 30 tournaments without a real cash.</li>
+      <li><strong>Move down without ego.</strong> Dropping stakes after losses isn't failure; it's the system working. The players who refuse to move down are the ones who go broke.</li>
+      <li><strong>Poker money is not spending money.</strong> Separate it fully. A bankroll you can't rebuild deserves stakes it can't feel.</li>
+    </ul>
+
+    <h3>Tilt: name it to tame it</h3>
+    <p>Tilt is any emotional state that changes your decisions — and it wears more costumes than anger. The common ones: <strong>injustice tilt</strong> ("I can't win a flip"), <strong>entitlement tilt</strong> ("I deserve this pot, I played it perfectly"), <strong>revenge tilt</strong> (targeting the player who sucked out), and <strong>winner's tilt</strong> (playing loose and fancy because you're up). The protocol:</p>
+    <ol>
+      <li><strong>Pre-commit to a stop-loss</strong> — e.g., three buy-ins or a two-bad-beats-in-ten-minutes rule. Decide it before the session, when you're sane.</li>
+      <li><strong>Catch the physical signs</strong> — heat, rushing decisions, narrating bad luck to yourself — and take a walk at the first one, not the fourth.</li>
+      <li><strong>Reframe with Module 1:</strong> the bad beat means you got the money in good. That's the job. The variance is where your profit comes from — bad players only keep playing because they sometimes win.</li>
+    </ol>
+
+    <h3>Game selection: the legal cheat code</h3>
+    <p>Your winrate is set less by how well you play than by <em>who you play against</em>. The ninth-best player in the world loses money at a table with the top eight. Choose tables with visible limpers, big average pots, and drinks on the rail; change seats to get position on the money (loose players on your right, so you act after them); and leave good games reluctantly, bad games instantly. Table selection feels like it isn't poker. It's the most profitable skill in poker.</p>
+
+    <h3>A study loop that compounds</h3>
+    <ol>
+      <li><strong>During play, mark hands</strong> — any pot where you felt unsure, win or lose. One line of notes is enough.</li>
+      <li><strong>After the session, review two or three</strong> of them cold: rebuild the ranges street by street, redo the math from Module 3, decide what the best line was.</li>
+      <li><strong>Keep a leak list.</strong> Patterns will emerge ("I pay off river raises," "I open too loose in the hijack"). Pick one leak per week and make it your only focus at the table.</li>
+      <li><strong>Ratio: roughly 4 hours playing to 1 hour studying.</strong> Playing volume without review repeats mistakes at scale; study without volume never gets tested.</li>
+    </ol>
+    <div class="keybox">
+      <span class="eyebrow">Module 7 takeaway</span>
+      <p>20–40 buy-ins for cash, 100+ for tournaments, move down without ego. Pre-commit a stop-loss and respect it. Pick tables like your winrate depends on it — it does. Review a few marked hands after every session.</p>
+    </div>
+  </div>
+  <div class="quiz" data-quiz="m7"></div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m6">← Module 6</button>
+    <button class="btn" data-complete="m7" data-goto="m8">Complete &amp; continue →</button>
+  </div>
+</section>
+
+<!-- ================= Module 8 ================= -->
+<section class="module" id="m8">
+  <div class="module-head">
+    <span class="eyebrow">Module 8 · Final</span>
+    <h2>The Hand Lab</h2>
+    <p class="lede">Eight full decisions, each one built to test a different module. Take your time: rebuild the ranges, do the math, then commit. The explanations tie each answer back to the concept it came from.</p>
+  </div>
+  <div class="lesson">
+    <p>Treat every scenario as a real table decision — assume a 100bb cash game and typical low-stakes opponents unless the hand says otherwise. There are defensible second choices in some spots; the graded answer is the line with the clearest edge, and the explanation covers the alternatives.</p>
+  </div>
+  <div class="quiz" data-quiz="lab"></div>
+  <div class="lesson" id="graduation" style="display:none">
+    <div class="keybox" style="border-left-color:var(--accent)">
+      <span class="eyebrow">Course complete</span>
+      <p><strong>You've finished Range &amp; Reason.</strong> The strategy is now explicit: ranges by position, prices by arithmetic, lines by range logic, exploits by player type, and a bankroll that survives the noise. Re-run the drills anytime — and bring the leak list to your next session.</p>
+    </div>
+  </div>
+  <div class="module-foot">
+    <button class="btn secondary" data-goto="m7">← Module 7</button>
+    <button class="btn" data-complete="m8" data-goto="m0" id="finish-btn">Finish the course ♠</button>
+  </div>
+</section>
+
+</main>
+</div>
+<script>
+(function(){
+"use strict";
+
+/* ================= State ================= */
+var STORE_KEY = "range-reason-v1";
+var state = {completed:{}, quiz:{}, best:0};
+try{
+  var saved = localStorage.getItem(STORE_KEY);
+  if(saved){ state = Object.assign(state, JSON.parse(saved)); }
+}catch(e){}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+var MODULES = ["m1","m2","m3","m4","m5","m6","m7","m8"];
+
+function refreshProgress(){
+  var done = MODULES.filter(function(m){ return state.completed[m]; }).length;
+  var pct = Math.round(done / MODULES.length * 100);
+  document.getElementById("progress-fill").style.width = pct + "%";
+  document.getElementById("progress-pct").textContent = pct + "%";
+  document.querySelectorAll("#navlist button").forEach(function(b){
+    var id = b.getAttribute("data-nav");
+    b.classList.toggle("done", !!state.completed[id]);
+    if(state.completed[id]){
+      b.querySelector(".nav-num").textContent = "✓";
+    }
+  });
+}
+
+/* ================= Navigation ================= */
+function show(id){
+  document.querySelectorAll(".module").forEach(function(s){
+    s.classList.toggle("visible", s.id === id);
+  });
+  document.querySelectorAll("#navlist button").forEach(function(b){
+    b.classList.toggle("active", b.getAttribute("data-nav") === id);
+  });
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("#navlist button").forEach(function(b){
+  b.addEventListener("click", function(){ show(b.getAttribute("data-nav")); });
+});
+document.querySelectorAll("[data-goto]").forEach(function(b){
+  b.addEventListener("click", function(){
+    var target = b.getAttribute("data-goto");
+    var complete = b.getAttribute("data-complete");
+    if(complete){
+      state.completed[complete] = true;
+      save(); refreshProgress();
+      if(complete === "m8"){
+        document.getElementById("graduation").style.display = "block";
+        document.getElementById("graduation").scrollIntoView({block:"center"});
+        return;
+      }
+    }
+    show(target);
+  });
+});
+
+/* ================= Range explorer ================= */
+var RANKS = "AKQJT98765432";
+function rankIdx(c){ return RANKS.indexOf(c); }
+
+/* Expand tokens like "22+", "ATs+", "A5s", "K9o+" into a set of combo labels */
+function expandRange(tokens){
+  var set = {};
+  tokens.forEach(function(t){
+    var plus = /\+$/.test(t);
+    var core = plus ? t.slice(0,-1) : t;
+    if(core.length === 2 && core[0] === core[1]){          /* pair */
+      var i = rankIdx(core[0]);
+      if(plus){ for(var k=i; k>=0; k--){ set[RANKS[k]+RANKS[k]] = 1; } }
+      else{ set[core] = 1; }
+    }else{                                                 /* suited / offsuit */
+      var hi = core[0], lo = core[1], suf = core[2];
+      if(plus){
+        var hiI = rankIdx(hi);
+        for(var k2 = rankIdx(lo); k2 > hiI; k2--){ set[hi+RANKS[k2]+suf] = 1; }
+      }else{
+        set[core] = 1;
+      }
+    }
+  });
+  return set;
+}
+
+var RANGES = {
+  UTG:{ pct:null, tokens:["22+","ATs+","A5s","KTs+","QTs+","JTs","T9s","98s","87s","76s","65s","AJo+","KQo"],
+    note:"Under the gun, six or more players are still to act, so every hand here must flop well against strong ranges: big pairs, big suited cards, and the best suited connectors. If it feels painfully tight, it's right." },
+  HJ:{ pct:null, tokens:["22+","A2s+","K9s+","Q9s+","J9s+","T8s+","97s+","87s","76s","65s","54s","ATo+","KJo+","QJo"],
+    note:"The hijack adds every suited ace (great equity and 3-bet-bluff material later) and the next tier of suited broadways. Offsuit hands expand only slightly — offsuit is where dominated disasters live." },
+  CO:{ pct:null, tokens:["22+","A2s+","K7s+","Q8s+","J8s+","T8s+","97s+","86s+","75s+","65s","54s","A9o+","KTo+","QTo+","JTo"],
+    note:"Cutoff: only the button and blinds remain, so you attack. Suited one-gappers appear, and the offsuit broadways arrive in force. You'll play most pots from here in position." },
+  BTN:{ pct:null, tokens:["22+","A2s+","K2s+","Q4s+","J6s+","T6s+","96s+","85s+","74s+","64s+","53s+","43s","A2o+","K9o+","Q9o+","J9o+","T9o","98o","87o"],
+    note:"The button opens nearly half of all hands, because guaranteed position all hand converts marginal cards into profit. Every suited king, every offsuit ace. This is where winrates are made — steal relentlessly." },
+  SB:{ pct:null, tokens:["22+","A2s+","K5s+","Q7s+","J7s+","T7s+","97s+","86s+","75s+","65s","54s","A4o+","K9o+","Q9o+","J9o+","T9o"],
+    note:"Small blind is wide but raise-or-fold: completing invites the big blind in cheap while you're out of position forever. Raise this range to about 3bb, fold the rest, and don't look back." }
+};
+
+function comboCount(label){
+  if(label.length === 2) return 6;
+  return label[2] === "s" ? 4 : 12;
+}
+function rangePct(set){
+  var n = 0;
+  Object.keys(set).forEach(function(k){ n += comboCount(k); });
+  return (n / 1326 * 100);
+}
+
+var gridEl = document.getElementById("range-grid");
+if(gridEl){
+  var cells = [];
+  for(var r=0;r<13;r++){
+    for(var c=0;c<13;c++){
+      var label;
+      if(r===c) label = RANKS[r]+RANKS[c];
+      else if(r<c) label = RANKS[r]+RANKS[c]+"s";
+      else label = RANKS[c]+RANKS[r]+"o";
+      var d = document.createElement("div");
+      d.className = "rg-cell" + (r===c ? " pair" : "");
+      d.textContent = label;
+      gridEl.appendChild(d);
+      cells.push({el:d, label:label});
+    }
+  }
+  var showPos = function(pos){
+    var set = expandRange(RANGES[pos].tokens);
+    cells.forEach(function(cell){
+      cell.el.classList.toggle("in", !!set[cell.label]);
+    });
+    document.getElementById("range-pct").textContent =
+      pos + " opens ~" + rangePct(set).toFixed(0) + "% of hands";
+    document.getElementById("range-note").textContent = RANGES[pos].note;
+    document.querySelectorAll("#pos-tabs button").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-pos")===pos);
+    });
+  };
+  document.querySelectorAll("#pos-tabs button").forEach(function(b){
+    b.addEventListener("click", function(){ showPos(b.getAttribute("data-pos")); });
+  });
+  showPos("UTG");
+}
+
+/* ================= Pot-odds trainer ================= */
+var DRAWS = [
+  {name:"the nut flush draw", hand:"A♥8♥", flop:"K♥6♥2♠", turnCard:"9♣", outs:9,  eq:{flop:35.0, turn:19.6},
+   count:"nine hearts complete your flush"},
+  {name:"an open-ended straight draw", hand:"9♠8♠", flop:"7♦6♣2♥", turnCard:"K♣", outs:8,  eq:{flop:31.5, turn:17.4},
+   count:"four tens and four fives complete your straight"},
+  {name:"a gutshot straight draw", hand:"J♣T♣", flop:"8♦7♥2♠", turnCard:"3♣", outs:4,  eq:{flop:16.5, turn:8.7},
+   count:"only the four nines complete your straight"},
+  {name:"a monster combo draw", hand:"9♥8♥", flop:"K♠7♥6♥", turnCard:"2♣", outs:15, eq:{flop:54.1, turn:32.6},
+   count:"nine hearts, plus the non-heart tens and fives — 15 outs"},
+  {name:"two overcards", hand:"A♣K♦", flop:"9♠6♥2♦", turnCard:"7♣", outs:6,  eq:{flop:24.6, turn:13.0},
+   count:"three aces and three kings make top pair"}
+];
+var POTS = [40,60,80,100,120];
+var RATIOS = [0.4,0.5,0.65,0.75,1.0,1.5];
+var drill = null, streak = state.best ? 0 : 0, best = state.best || 0;
+
+function fmtPct(x){ return x.toFixed(1).replace(/\.0$/,"") + "%"; }
+
+function dealSpot(){
+  var t = DRAWS[Math.floor(Math.random()*DRAWS.length)];
+  var street = Math.random() < 0.5 ? "flop" : "turn";
+  var pot = POTS[Math.floor(Math.random()*POTS.length)];
+  var bet = Math.round(pot * RATIOS[Math.floor(Math.random()*RATIOS.length)]);
+  var req = bet / (pot + 2*bet) * 100;
+  var eq = t.eq[street];
+  drill = {t:t, street:street, pot:pot, bet:bet, req:req, eq:eq,
+           thin: Math.abs(eq - req) < 1.5};
+  var board = street === "flop" ? t.flop : t.flop + " " + t.turnCard;
+  var toCome = street === "flop" ? "two cards to come" : "one card to come";
+  document.getElementById("drill-stage").innerHTML =
+    "<p class='ui' style='margin:0 0 .2rem;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7'>" +
+    (street==="flop"?"On the flop":"On the turn") + " · " + toCome + "</p>" +
+    "<p>You hold <span class='hand'>" + suitify(t.hand) + "</span> on <span class='hand'>" + suitify(board) +
+    "</span> — " + t.name + " (" + t.count + ").</p>" +
+    "<p>Your opponent moves all-in. You're sure you win if you hit, and only if you hit.</p>" +
+    "<div class='drill-numbers'><span>Pot before shove<b>$" + pot + "</b></span>" +
+    "<span>Shove size<b>$" + bet + "</b></span>" +
+    "<span>To call<b>$" + bet + "</b></span></div>";
+  var fb = document.getElementById("drill-feedback");
+  fb.className = "drill-feedback"; fb.innerHTML = "";
+}
+
+function suitify(s){
+  return s.replace(/([♥♦])/g, "<span class='rs'>$1</span>");
+}
+
+function answerDrill(action){
+  if(!drill) return;
+  var shouldCall = drill.eq >= drill.req;
+  var right = drill.thin ? true : (action === "call") === shouldCall;
+  streak = right ? streak + 1 : 0;
+  if(streak > best){ best = streak; state.best = best; save(); }
+  document.getElementById("drill-streak").textContent = "Streak: " + streak + " · Best: " + best;
+  var mult = drill.street === "flop" ? 4 : 2;
+  var rough = drill.t.outs * mult;
+  if(drill.street === "flop" && drill.t.outs > 8) rough -= (drill.t.outs - 8);
+  var evCall = (drill.eq/100 * (drill.pot + drill.bet) - (1 - drill.eq/100) * drill.bet);
+  var fb = document.getElementById("drill-feedback");
+  fb.className = "drill-feedback show " + (right ? "good" : "bad");
+  var verdict;
+  if(drill.thin){ verdict = "Razor thin — either action is fine here."; }
+  else if(right){ verdict = "Correct. " + (shouldCall ? "Calling shows a profit." : "Folding saves money."); }
+  else{ verdict = "Not this time. " + (shouldCall ? "This call is profitable." : "This call is lighting money on fire."); }
+  fb.innerHTML = "<span class='verdict'>" + verdict + "</span>" +
+    "<div class='math mono'>" +
+    "Required equity = $" + drill.bet + " ÷ ($" + drill.pot + " + 2×$" + drill.bet + ") = <strong>" + fmtPct(drill.req) + "</strong><br>" +
+    "Rule of " + mult + ": " + drill.t.outs + " outs × " + mult +
+    (drill.street==="flop" && drill.t.outs>8 ? " − " + (drill.t.outs-8) + " (big-draw adj.)" : "") +
+    " ≈ " + rough + "% &nbsp;(true equity " + fmtPct(drill.eq) + ")<br>" +
+    "EV(call) = " + (drill.eq/100).toFixed(2) + "×$" + (drill.pot+drill.bet) + " − " + (1-drill.eq/100).toFixed(2) + "×$" + drill.bet +
+    " = <strong>" + (evCall>=0?"+":"−") + "$" + Math.abs(evCall).toFixed(0) + "</strong></div>";
+}
+
+if(document.getElementById("drill-stage")){
+  document.getElementById("drill-call").addEventListener("click", function(){ answerDrill("call"); });
+  document.getElementById("drill-fold").addEventListener("click", function(){ answerDrill("fold"); });
+  document.getElementById("drill-next").addEventListener("click", dealSpot);
+  document.getElementById("drill-streak").textContent = "Streak: 0 · Best: " + best;
+  dealSpot();
+}
+
+/* ================= Quizzes ================= */
+var QUIZZES = {
+m1:{title:"Module 1 quiz", qs:[
+ {q:"The pot is $80 and your opponent shoves their last $40. You estimate you win 30% of the time. What's the EV of calling?",
+  o:["−$8 — fold; you lose most of the time","+$8 — call, even though you usually lose","Exactly break-even","Impossible to say without seeing their cards"], a:1,
+  why:"EV = 0.30 × ($80 + $40) − 0.70 × $40 = $36 − $28 = +$8. You lose this pot 70% of the time and it's still a clearly correct call — the price, not the win frequency, decides."},
+ {q:"Which of these is an actual reason to bet?",
+  o:["To find out where I stand","Because I raised preflop, so I should follow through","Because a worse hand will call","To end the hand before a scare card comes"], a:2,
+  why:"Value (worse hands call) and bluffing (better hands fold) are the only two profitable reasons. \"Information\" costs a bet and arrives garbled; automatic follow-through is a habit, not a reason."},
+ {q:"Why is the button the most profitable seat at the table?",
+  o:["It acts last on every postflop street","It posts no blind","It gets better cards on average","It can see the big blind's reaction first"], a:0,
+  why:"Cards average out identically in every seat. What the button gets is information: it sees everyone's decision before making its own on the flop, turn, and river — a structural edge no read can match."},
+ {q:"You get all-in on the flop with 80% equity and lose the pot. What should you change?",
+  o:["Play more cautiously with one pair","Nothing — the decision was excellent and the result is noise","Stop playing big pots against this opponent","Tighten up until the deck warms up"], a:1,
+  why:"Judge decisions, not outcomes. An 80/20 loses one time in five — that's the deal you want on offer forever. Changing your strategy because variance showed up is how good players make themselves bad."},
+ {q:"Statistically, the biggest difference between long-term winners and losers is that winners…",
+  o:["Bluff much more often","See more flops to hit more hands","Raise or fold in the spots where losers call","Read physical tells better"], a:2,
+  why:"Calling can only win by holding the best hand. Raising and folding both add another way to profit — folds from opponents, or savings for you. Winners live at the poles; losers live in the passive middle."}
+]},
+m2:{title:"Module 2 quiz", qs:[
+ {q:"You're under the gun with K♦J♣. The pot is unopened. What's the play?",
+  o:["Raise — two big cards","Limp and see a cheap flop","Fold","Raise only if the table is tight"], a:2,
+  why:"KJo isn't in the UTG range, and for a reason: against the ranges that play back at an early open, it's dominated — when you flop a king or jack and get action, you're often against AK, KQ, or AJ. Classic reverse implied odds."},
+ {q:"Why is open-limping a losing habit?",
+  o:["It builds the pot too fast","It caps your winnings, invites multiway pots, and announces weakness — with no way to win the pot before the flop","It's fine, it just looks weak","Because you can't limp with pocket aces"], a:1,
+  why:"A raise can win immediately, builds a pot for your strong range, and thins the field. A limp does none of these. If a hand isn't worth raising, it's not worth playing (one exception: completing the small blind in a limped multiway pot)."},
+ {q:"A middle-position player opens to 2.5bb. You're in the cutoff with Q♠Q♥. Best line?",
+  o:["Flat call and keep the pot small","3-bet to about 7.5bb (3× the open)","3-bet the minimum","Shove 100bb now"], a:1,
+  why:"QQ wants a bigger pot against worse hands and fewer opponents — a 3-bet to ~3× the open achieves both. Flatting lets the blinds in cheap and leaves you guessing on ace-high flops with a capped, hidden hand."},
+ {q:"When is calling a raise with a small pocket pair (set-mining) profitable?",
+  o:["Always — sets win big pots","When both stacks are at least ~10× the call and the opener will pay you off","Only in position","Only against tight players"], a:1,
+  why:"You flop a set about 1 in 8. You need roughly 10:1 in implied odds to cover the misses — meaning deep effective stacks AND an opponent whose range is strong enough to stack off when you hit."},
+ {q:"The button opens to 2.5bb and it folds to you in the big blind with 8♥6♥. You should…",
+  o:["Fold — it's junk","Call — you're getting a discount and closing the action","3-bet — punish the steal","Call only if the button is a nit"], a:1,
+  why:"You need only ~27% equity to continue (call 1.5 to win 4), and suited, connected hands clear that bar easily against a wide button range. The same hand is a fold from any other seat — the discount is the whole story."}
+]},
+m3:{title:"Module 3 quiz", qs:[
+ {q:"You flop a flush draw (9 outs) and face an all-in. Roughly what's your equity with two cards to come?",
+  o:["About 18%","About 27%","About 36%","About 45%"], a:2,
+  why:"Rule of 4: 9 outs × 4 ≈ 36% (the true number is 35%). With one card to come it would be 9 × 2 ≈ 18%. Two numbers, ten seconds, most of poker math."},
+ {q:"The pot is $100 and your opponent bets $50. What equity do you need to call?",
+  o:["20%","25%","33%","50%"], a:1,
+  why:"$50 ÷ ($100 + $50 + $50) = 25%. A half-pot bet always offers 25% — worth knowing cold, along with ⅓ pot → 20%, ⅔ pot → 28.5%, and full pot → 33%."},
+ {q:"You hold a naked gutshot (4 outs) on the turn facing a ⅔-pot all-in. The math says…",
+  o:["Call — you have implied odds","Fold — you have ~8% and need ~28.5%","Call — the rule of 4 gives you 16%","Raise all-in"], a:1,
+  why:"One card to come: 4 × 2 ≈ 8%. You need 28.5% against a ⅔-pot bet, and against an all-in there are no future streets, so implied odds are zero. The rule of 4 only applies when you're seeing BOTH remaining cards."},
+ {q:"Which situation has the best implied odds?",
+  o:["An obvious flush draw against a short stack","A hidden straight draw, deep stacks, against an opponent with a big hand","Any draw in a limped pot","A gutshot against a calling station with $30 behind"], a:1,
+  why:"Implied odds = money you'll win AFTER you hit. That requires stacks deep enough to pay, an opponent holding something worth paying with, and a draw disguised enough that they will. A third flush card alarms everyone; the sneaky straight card doesn't."},
+ {q:"Why do hands like K♠T♦ carry heavy reverse implied odds?",
+  o:["They rarely hit the flop","When they hit top pair and face real action, they're often dominated by AK, KQ, or KJ","They can't make a flush","They're hard to fold preflop"], a:1,
+  why:"KTo hits a king-high flop, bets, gets called — and the calling range is full of better kings. It wins small pots and loses big ones: the exact definition of a hand that costs more than it looks like it costs."}
+]},
+m4:{title:"Module 4 quiz", qs:[
+ {q:"You raise UTG, the big blind calls. Flop: A♦K♠4♣. The big blind checks. Your plan with your whole range?",
+  o:["Bet big — protect against draws","Bet small (~⅓ pot) at a very high frequency","Check everything — the ace is scary","Only bet when you have an ace"], a:1,
+  why:"This board smashes the UTG range (all the AK, AA, KK, AQ) and misses the big blind's defend. With a huge range advantage and no draws to charge, a small bet with nearly everything folds out their air and taxes their weak pairs cheaply."},
+ {q:"You raise UTG, the big blind calls. Flop: 6♥5♥4♣. Now what?",
+  o:["C-bet big — you have initiative","C-bet small like always","Check much of your range — this board favors the caller","Give up unless you have an overpair"], a:2,
+  why:"The big blind's defend range is full of suited connectors and middling cards that just hit this board; your early-position range mostly missed. No range advantage means no automatic c-bet — \"I raised preflop\" is a habit, not a reason."},
+ {q:"In a pot with three players, your c-bet bluffing frequency should be…",
+  o:["The same as heads-up","Higher — more dead money","Much lower — someone usually has a piece","Zero, even with strong draws"], a:2,
+  why:"Each extra player multiplies the chance somebody connected. Multiway, bet your strong hands and best draws for value and equity denial, and put the pure bluffs away."},
+ {q:"On a wet board like J♠T♠7♦ where you hold strong hands and big draws, your bet sizing should be…",
+  o:["Small — keep them in","Large (66–75% pot), with a polarized range","Always all-in","Whatever you bet last time"], a:1,
+  why:"Dynamic boards demand a price: draws are everywhere and equities run close. Bet big with your strong hands (charge the draws) and your best draws (fold equity + real equity), and check your medium hands. Small bets give every draw a bargain."},
+ {q:"A preflop raiser makes a ⅓-pot c-bet on K♦8♣3♠. You're in position with A♠5♠ (backdoor flush, overcard). Best response?",
+  o:["Fold — you missed","Always raise","Call, planning to take the pot on turns they give up on","Call, planning to fold every turn"], a:2,
+  why:"Small dry-board c-bets come from very wide, weak ranges. Your ace-high plus backdoors has real equity, and auto-c-bettors give up on turns constantly. Floating in position to attack that surrender is a core counter — fit-or-fold is exactly what their strategy preys on."}
+]},
+m5:{title:"Module 5 quiz", qs:[
+ {q:"A passive player who has only called all night raises your river bet. You hold top pair, good kicker. You should…",
+  o:["Call — you beat bluffs","Raise — they're stealing","Fold without drama","Call and show the table your discipline"], a:2,
+  why:"Ranges only narrow, and a passive player's river raising range starts at two pair. They are almost never bluffing — the population under-bluffs this exact spot massively. Top pair is now a bluff-catcher with no bluffs to catch."},
+ {q:"You raised preflop and c-bet a 9♠6♥2♦ flop; your opponent called. Which turn card is best for a second barrel?",
+  o:["The 4♣","An ace","The 6♦, pairing the board","Any heart"], a:1,
+  why:"The ace hits YOUR story hard — a preflop raiser holds far more aces than a flop caller — so their weak pairs and draws now face top-pair-or-better credibility. The 4 changes nothing, and the paired 6 helps their flop-calling range if anything."},
+ {q:"The river completes nothing. You hold A♠J♠ on J♦8♣3♥2♦9♣ against one opponent who has check-called twice. You should…",
+  o:["Check back — avoid a check-raise","Bet half to two-thirds pot for thin value","Bet tiny to \"look weak\"","Go all-in"], a:1,
+  why:"Worse jacks, stubborn nines, and eights all call a reasonable bet. Naming the worse hands that call is the whole test — and here there are several. Skipping thin value bets is the single most expensive polite habit in poker."},
+ {q:"A pot-sized river bluff needs to succeed how often to break even?",
+  o:["33%","50%","66%","75%"], a:1,
+  why:"You risk one pot to win one pot: break-even at 50%. A half-pot bluff risks 0.5 to win 1 — break-even at 33%. Most opponents fold more often than these thresholds in capped spots, which is why well-chosen bluffs print."},
+ {q:"Which hand makes the best river bluff on K♦Q♠6♥6♠2♥ after you bet flop and turn?",
+  o:["A♥5♥ — a missed nut flush draw","2♣2♦ — a full house","K♣3♣ — top pair","7♦7♣ — a pair with showdown value"], a:0,
+  why:"The missed draw has zero showdown value (checking wins nothing), told a perfectly consistent aggressive story, and holding the A♥ blocks some of the hands that continue. The pairs all win at showdown sometimes — bluffing them turns made hands into expensive fiction."}
+]},
+m6:{title:"Module 6 quiz", qs:[
+ {q:"Your opponent has called down three streets with bottom pair twice this hour. Your adjustment?",
+  o:["Bluff bigger — make them fold","Never bluff; value bet much thinner than feels comfortable","Avoid pots with them","Slow-play your monsters"], a:1,
+  why:"A calling station's leak is calling. Bluffing into it is handing over money; the exploit is relentless thin value — top pair weak kicker becomes a three-street hand. Stations are the steadiest income in poker if you never bluff them."},
+ {q:"A nit who has folded for two hours raises your turn bet. You hold top pair, top kicker. You should…",
+  o:["Call down — you have top pair","Re-raise to define your hand","Fold and move on","Call the turn, fold the river"], a:2,
+  why:"A nit's aggression range is the top of the deck — two pair and better, often much better. Top pair is nowhere near the hand this raise represents. The fold that feels weakest is often the most profitable decision of the session."},
+ {q:"The table maniac has raised eight of the last ten hands. Your best adjustment?",
+  o:["Out-bluff them at their own game","Tighten your range, then call down lighter with good bluff-catchers","Fold until they leave","Play exactly your normal strategy"], a:1,
+  why:"Maniacs bluff far above equilibrium, which makes your good one-pair hands into value hands. Don't raise them off their bluffs — let them keep firing into your calls. Expect variance; welcome it."},
+ {q:"At low stakes, an unknown player makes a huge overbet on the river. Your one-pair bluff-catcher should usually…",
+  o:["Call — the sizing is suspicious","Fold — the population under-bluffs big river bets","Raise all-in","Call to gather information"], a:1,
+  why:"Population read, not hand read: low-stakes players bomb the river with value far more often than theory allows. Until this specific player shows you an overbet bluff, the disciplined fold beats the heroic call by a wide margin."},
+ {q:"A conventional live player limps, then re-raises after you raise behind. Their most likely holding?",
+  o:["A random bluff","Suited connectors","Aces or kings","Any pair"], a:2,
+  why:"The limp-raise from an old-school player is the loudest bell in live poker: it's overwhelmingly AA/KK, trying to trap. Give action with your monsters, fold nearly everything else, and be grateful for the free information."}
+]},
+m7:{title:"Module 7 quiz", qs:[
+ {q:"A sensible bankroll for your regular cash-game stake is about…",
+  o:["5 buy-ins","10 buy-ins","20–40 buy-ins","There's no need for a formal bankroll"], a:2,
+  why:"Downswings of 5–10 buy-ins happen to excellent players playing excellently. 20–40 buy-ins makes ruin nearly impossible while your edge does its slow work. Tournament players need 100+ — MTT variance is another animal entirely."},
+ {q:"You've lost six buy-ins at your usual stake this month and your bankroll has thinned. The right move is…",
+  o:["Move UP to win it back faster","Stay and grind — moving down is for quitters","Move down until the roll recovers","Take a shot at the biggest game in the room"], a:2,
+  why:"Moving down is the system functioning, not failing. It converts a threatening downswing into a routine one and lets you rebuild against softer opposition. The refusal to move down is one of the classic ways skilled players go broke."},
+ {q:"The most effective tilt defense is…",
+  o:["Willpower in the moment","A stop-loss decided before the session, followed without debate","Playing through it to prove you're fine","Switching tables"], a:1,
+  why:"In-the-moment judgment is exactly what tilt corrupts, so the decision must be made earlier, by the calm version of you. Three buy-ins down, or visible signs like rushing and heat — whatever the trigger, the rule fires automatically."},
+ {q:"Two tables have seats open: Table A is quiet and solid; Table B has three limpers per hand and big loose pots. You're a slight favorite at A and a big favorite at B. Choose…",
+  o:["Table A — better competition improves your game","Table B, and take the seat to the LEFT of the loosest players","Table B, seat doesn't matter","Whichever has the better view of the game on TV"], a:1,
+  why:"Winrate is mostly opponent selection. Table B prints, and sitting to the left of the loose money means you act after them all night — position compounding selection. Improving your game is what study time is for; table time is for harvesting."},
+ {q:"The highest-leverage study habit in this course is…",
+  o:["Watching poker streams for hours","Reviewing a few marked hands after each session and working one leak at a time","Memorizing solver outputs for rare spots","Discussing bad beats in detail"], a:1,
+  why:"Marked hands are your personal leak detector — they're the spots where YOUR strategy ran out. Reviewing them cold, then focusing on one leak per week, compounds. Bad-beat stories are entertainment; solver memorization without fundamentals is decoration."}
+]},
+lab:{title:"The Hand Lab · eight decisions", qs:[
+ {q:"Live 1/2, three limpers. You're on the button with A♠K♦. Your action?",
+  o:["Limp along and keep the pot small","Raise to 6× the big blind","Raise to 2.5× the big blind","Fold — AK misses two flops in three"], a:1,
+  why:"Module 2: raise 3bb + 1 per limper. Limpers hold weak, capped ranges; AK on the button wants a bloated pot in position against exactly that. A 2.5bb raise prices in all three limpers and buys nothing. Small raises into live limp-fests are the leak; big isolation raises are the exploit."},
+ {q:"You call a flop bet with 9♠8♠ on 7♦6♣2♥. The turn is the K♦. Pot is $100 and your opponent shoves $100. You…",
+  o:["Call — eight clean outs is a monster draw","Call — implied odds","Fold — 16% equity against a 33% price with no future betting","Raise… wait, you can't"], a:2,
+  why:"Module 3: one card to come, 8 outs × 2 ≈ 16%. A pot-sized bet needs 33%. And against an all-in, implied odds are exactly zero — there is no later street where your hidden straight gets paid. The same draw on the FLOP (≈32%) would be close; the street changes everything."},
+ {q:"You open the cutoff with A♦Q♦, only the big blind calls. Flop K♠7♦2♣, they check. You…",
+  o:["Check back — you missed","Bet about ⅓ pot","Bet full pot to end it now","Bet only if they look weak"], a:1,
+  why:"Module 4: dry king-high board, and you're the preflop raiser — your range holds the kings and big pairs, theirs mostly doesn't. This is a textbook high-frequency small c-bet: their air folds, their weak pairs pay a tax, and your AQ picks up the pot unimproved a huge share of the time."},
+ {q:"A calling station check-calls you twice, then checks the river. Board K♠9♦5♣2♥8♦; you hold K♥Q♥. You…",
+  o:["Check back — they might have two pair","Bet about ⅔ pot for value","Bet $5 into $120 to guarantee a call","Move all-in"], a:1,
+  why:"Modules 5 and 6 together: name the worse hands that call — worse kings, nines, stubborn fives, random pairs — and against a station, that list is long and the calls are near-certain. Checking back \"to be safe\" against the one player who never check-raises is the most expensive courtesy in poker."},
+ {q:"You bet top set of aces on A♠J♥8♥3♥. The river is the Q♥, putting four hearts out. The table nit check-raises your river bet. You…",
+  o:["Call — you have top set","Re-raise all-in","Fold","Call to keep them honest"], a:2,
+  why:"Modules 5 and 6: ranges only narrow, and a nit's river check-raise on a four-flush board is a flush, full stop. Your set — mighty three streets ago — is now a bluff-catcher against a player who does not bluff. The strength of your hand in a vacuum is irrelevant; its strength against their raising range is all that counts."},
+ {q:"A tight UTG player opens to 3bb. Everyone folds to you on the button with 5♥5♦. Stacks are 150bb. You…",
+  o:["Fold — you're behind their range","Call, set-mining with position","3-bet as a bluff","Shove"], a:1,
+  why:"Module 2 and 3: this is the set-mine dream — 50× the call behind, position guaranteed, and a tight opener whose big pairs and AK will pay handsomely on the 1-in-8 flops where your set arrives. Against a short stack or a limp, the same call is a leak. Context, not the hand, makes the play."},
+ {q:"You barreled flop and turn with A♥5♥ (nut flush draw) on K♦Q♠6♥2♥. The river is the 9♠ — brick. Your TAG opponent has just called twice and checks. You…",
+  o:["Check back and lose at showdown","Bet big — finish the story","Bet tiny as a \"blocker bet\"","Show the bluff to buy future action"], a:1,
+  why:"Module 5's full checklist: your hand has zero showdown value, your line told one consistent story (big hand, all three streets), your A♥ blocks flush draws that got there— and a TAG who just called twice holds a capped range full of one-pair hands that can fold. Every credential a bluff can carry, this one carries. The check-back wins exactly nothing."},
+ {q:"You're three buy-ins down. Your aces just lost to a runner-runner flush and your face feels hot. The game is fantastic. You…",
+  o:["Stay — never leave a good game","Move up a stake to recover faster","Quit, per the stop-loss you set before the session","Stay but play super tight"], a:2,
+  why:"Module 7: the stop-loss was set by the calm version of you precisely because THIS version — hot-faced, wronged, and rationalizing with \"but the game is good\" — cannot be trusted to judge. The game will be good tomorrow. Your decisions, right now, are not. That's the whole trade, and it's not close."}
+]}
+};
+
+document.querySelectorAll(".quiz").forEach(function(container){
+  var key = container.getAttribute("data-quiz");
+  var quiz = QUIZZES[key];
+  if(!quiz) return;
+  var head = document.createElement("h3");
+  head.className = "quiz-title";
+  head.innerHTML = "<span class='suit'>♦</span> " + quiz.title;
+  container.appendChild(head);
+  var answered = 0, correct = 0;
+  quiz.qs.forEach(function(item, qi){
+    var qEl = document.createElement("div");
+    qEl.className = "quiz-q";
+    var qt = document.createElement("p");
+    qt.className = "qtext";
+    qt.textContent = (qi+1) + ". " + item.q;
+    qEl.appendChild(qt);
+    var opts = document.createElement("div");
+    opts.className = "quiz-opts";
+    var why = document.createElement("div");
+    why.className = "quiz-why";
+    why.textContent = item.why;
+    item.o.forEach(function(optText, oi){
+      var b = document.createElement("button");
+      b.className = "quiz-opt";
+      b.textContent = optText;
+      b.addEventListener("click", function(){
+        opts.querySelectorAll("button").forEach(function(x){ x.disabled = true; });
+        opts.querySelectorAll("button")[item.a].classList.add("correct");
+        if(oi !== item.a){ b.classList.add("wrong"); } else { correct++; }
+        why.classList.add("show");
+        answered++;
+        if(answered === quiz.qs.length){
+          scoreEl.classList.add("show");
+          scoreEl.textContent = "Score: " + correct + " / " + quiz.qs.length +
+            (correct === quiz.qs.length ? " — perfect. ♠" :
+             correct >= quiz.qs.length - 1 ? " — strong." :
+             " — worth rereading the module before moving on.");
+          state.quiz[key] = correct; save();
+        }
+      });
+      opts.appendChild(b);
+    });
+    qEl.appendChild(opts);
+    qEl.appendChild(why);
+    container.appendChild(qEl);
+  });
+  var scoreEl = document.createElement("div");
+  scoreEl.className = "quiz-score ui";
+  container.appendChild(scoreEl);
+});
+
+/* ================= Init ================= */
+refreshProgress();
+if(state.completed.m8){ document.getElementById("graduation").style.display = "block"; }
+})();
+</script>
+</body>
+</html>
