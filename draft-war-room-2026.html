@@ -1,0 +1,921 @@
+<title>2026 Draft War Room</title>
+<style>
+  /* ---------- theme tokens: light is the base, dark via media query + toggle ---------- */
+  :root {
+    --plane: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --accent: #1e5c41;          /* turf green — brand accent, not a series color */
+    --accent-ink: #ffffff;
+    --good: #006300;            /* success text (light) */
+    --bad: #d03b3b;
+    --rb: #1baf7a;
+    --wr: #2a78d6;
+    --te: #eb6834;
+    --qb: #4a3aa7;
+    --chip-ink: #0b0b0b;
+    --row-alt: #f4f3ef;
+    --tooltip-bg: #0b0b0b;
+    --tooltip-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      --plane: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --accent: #7fd0a0;
+      --accent-ink: #0d0d0d;
+      --good: #0ca30c;
+      --bad: #e66767;
+      --rb: #199e70;
+      --wr: #3987e5;
+      --te: #d95926;
+      --qb: #9085e9;
+      --chip-ink: #ffffff;
+      --row-alt: #202020;
+      --tooltip-bg: #fcfcfb;
+      --tooltip-ink: #0b0b0b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --accent: #7fd0a0;
+    --accent-ink: #0d0d0d;
+    --good: #0ca30c;
+    --bad: #e66767;
+    --rb: #199e70;
+    --wr: #3987e5;
+    --te: #d95926;
+    --qb: #9085e9;
+    --chip-ink: #ffffff;
+    --row-alt: #202020;
+    --tooltip-bg: #fcfcfb;
+    --tooltip-ink: #0b0b0b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--plane);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px 72px; }
+
+  /* ---------- masthead ---------- */
+  .masthead { padding: 44px 0 20px; border-bottom: 3px solid var(--accent); }
+  .kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  .masthead h1 {
+    font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.02em;
+    line-height: 1.05; margin: 0 0 12px; text-wrap: balance; text-transform: uppercase;
+  }
+  .masthead p.lede { color: var(--ink-2); max-width: 62ch; margin: 0 0 18px; font-size: 15px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .meta-chip {
+    font-size: 12px; font-weight: 600; padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 999px; color: var(--ink-2); background: var(--surface);
+  }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 44px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 6px;
+  }
+  section > h2 {
+    font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; text-wrap: balance;
+  }
+  .section-sub { color: var(--ink-2); font-size: 14px; margin: 0 0 18px; max-width: 68ch; }
+
+  /* ---------- verdict tiles ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .tile .t-label {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  }
+  .tile .t-value { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
+  .tile .t-note { font-size: 12.5px; color: var(--ink-2); }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-top: 16px;
+  }
+  .card h3 { margin: 0 0 2px; font-size: 16px; font-weight: 700; }
+  .card .card-sub { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
+
+  /* ---------- chart chrome ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .chart-scroll { overflow-x: auto; position: relative; }
+  svg { display: block; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .dot { cursor: pointer; }
+  .dot:focus { outline: none; }
+  .dot:focus-visible { stroke: var(--ink); stroke-width: 2; }
+  #tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--tooltip-bg); color: var(--tooltip-ink);
+    font-size: 12.5px; line-height: 1.4; padding: 8px 11px; border-radius: 8px;
+    max-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  }
+  #tooltip .tt-name { font-weight: 700; }
+  #tooltip .tt-meta { opacity: 0.75; }
+
+  /* ---------- tables ---------- */
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th {
+    text-align: left; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--baseline);
+    white-space: nowrap;
+  }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--row-alt); }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  th.num { text-align: right; }
+  td .p-name { font-weight: 600; white-space: nowrap; }
+  td .p-note { color: var(--ink-2); }
+  .pos-chip {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+    white-space: nowrap;
+  }
+  .pos-chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+  .flag { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+  .flag.value { color: var(--good); }
+  .flag.fade { color: var(--bad); }
+  .flag.rookie { color: var(--muted); }
+
+  /* ---------- tier boards ---------- */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 16px; }
+  .tier-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--grid); }
+  .tier-row:last-child { border-bottom: none; }
+  .tier-tag {
+    flex: none; width: 58px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--muted); padding-top: 3px;
+  }
+  .tier-names { display: flex; flex-wrap: wrap; gap: 6px; }
+  .name-chip {
+    font-size: 12.5px; font-weight: 600; padding: 3px 9px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--plane); white-space: nowrap;
+  }
+  .name-chip.hl { border-left: 3px solid var(--pos-c, var(--accent)); }
+  .tier-note { font-size: 12px; color: var(--ink-2); margin: 10px 0 0; }
+
+  /* ---------- plan cards ---------- */
+  .plan-step { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 13.5px; }
+  .plan-step:last-child { border-bottom: none; }
+  .plan-rounds { flex: none; width: 70px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); }
+  .plan-step div:last-child { color: var(--ink-2); }
+  .plan-step b { color: var(--ink); }
+
+  /* ---------- checklist ---------- */
+  ul.clean { margin: 0; padding-left: 20px; }
+  ul.clean li { margin: 6px 0; font-size: 13.5px; color: var(--ink-2); }
+  ul.clean li b { color: var(--ink); }
+
+  /* ---------- footer ---------- */
+  .foot { margin-top: 56px; border-top: 1px solid var(--baseline); padding-top: 18px; font-size: 12.5px; color: var(--muted); }
+  .foot a { color: var(--accent); text-decoration: none; }
+  .foot a:hover, .foot a:focus-visible { text-decoration: underline; }
+  .foot ul { columns: 2; column-gap: 32px; margin: 8px 0 16px; padding-left: 18px; }
+  .foot li { margin: 3px 0; }
+  @media (max-width: 640px) { .foot ul { columns: 1; } }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dot { transition: r 0.12s ease; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">ESPN Fantasy Football · Snake Draft · August 2026</p>
+    <h1>2026 Draft War Room</h1>
+    <p class="lede">
+      One page to run your draft from: the consensus board, position tiers, the values worth
+      reaching for, the landmines worth dodging, and a round-by-round plan for whichever
+      pick slot you land. Built around ESPN's default 10-team, full-PPR settings — every
+      note tells you what changes in a 12-team room.
+    </p>
+    <div class="meta-row">
+      <span class="meta-chip">10-team · Full PPR</span>
+      <span class="meta-chip">Lineup: QB · 2 RB · 2 WR · TE · FLEX · D/ST · K · 7 Bench</span>
+      <span class="meta-chip">Playoffs weeks 15–17</span>
+      <span class="meta-chip">ADP snapshot: mid-August 2026</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">The five theses</p>
+    <h2>How to think about this draft</h2>
+    <div class="tiles" style="margin-top:14px;">
+      <div class="tile">
+        <span class="t-label">Market shape</span>
+        <span class="t-value">RB-heavy early</span>
+        <span class="t-note">Six of the first ten picks are running backs. RB–RB starts are the most popular build of 2026 — the position thins out fast after round 4.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Quarterback</span>
+        <span class="t-value">Wait until R6+</span>
+        <span class="t-note">Josh Allen is in his own tier, but the QB8–QB14 range is close enough that waiting wins. Lamar Jackson at a discount is the rebound bet.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Tight end</span>
+        <span class="t-value">Two worth paying for</span>
+        <span class="t-note">Brock Bowers and Trey McBride stand alone. Miss both and the next stop is Colston Loveland — then punt until the double-digit rounds.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Biggest landmine</span>
+        <span class="t-value">CMC at 1.05</span>
+        <span class="t-note">Age-30 season, led the NFL in carries last year, long injury history. The price ignores all three.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Rookie headliner</span>
+        <span class="t-value">Jeremiyah Love</span>
+        <span class="t-note">No. 3 overall to Arizona — first top-5 RB since Saquon in 2018. Priced mid-round while he's eased in behind veterans.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The board</p>
+    <h2>How the first five rounds fall</h2>
+    <p class="section-sub">
+      Approximate consensus ADP across major platforms, mid-August 2026, mapped to 10-team
+      rounds. Hover or tab to any pick for detail; the full board with notes is in the
+      table below. In a 12-team league everything shifts roughly two picks earlier per round.
+    </p>
+
+    <div class="card">
+      <h3>Pick-by-pick flow, picks 1–48</h3>
+      <p class="card-sub">Each dot is one player at his consensus slot · lanes group by position · vertical rules mark 10-team round turns</p>
+      <div class="legend" id="legend"></div>
+      <div class="chart-scroll"><div id="lanes-chart" style="min-width:720px;"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>What each round is made of</h3>
+      <p class="card-sub">Count of players by position inside each 10-team round (round 5 shown through pick 48)</p>
+      <div class="chart-scroll"><div id="round-chart" style="min-width:560px;"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>The big board — top 48 with notes</h3>
+      <p class="card-sub">Same data as the charts above. Flags: <span class="flag value">VALUE</span> = worth a small reach · <span class="flag fade">FADE</span> = let someone else pay it · <span class="flag rookie">ROOKIE</span></p>
+      <div class="table-scroll">
+        <table id="board-table">
+          <thead>
+            <tr>
+              <th class="num">ADP</th><th>Player</th><th>Pos</th><th>Team</th><th>Flag</th><th>Note</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Position tiers</p>
+    <h2>Tier boards</h2>
+    <p class="section-sub">
+      Draft the tier, not the name — when a tier is about to empty, that's your cue to take
+      the position. Chips with a colored edge are the players this board says to prioritize at cost.
+    </p>
+    <div class="grid-2">
+
+      <div class="card" style="margin-top:0;">
+        <h3><span class="pos-chip"><i style="background:var(--rb)"></i>RUNNING BACK</span></h3>
+        <p class="card-sub">The position that decides this draft — the market is right to be early</p>
+        <div class="tier-row"><span class="tier-tag">Tier 1</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--rb)">Bijan Robinson</span>
+          <span class="name-chip hl" style="--pos-c:var(--rb)">Jahmyr Gibbs</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 2</span><div class="tier-names">
+          <span class="name-chip">Jonathan Taylor</span>
+          <span class="name-chip">Christian McCaffrey</span>
+          <span class="name-chip">De'Von Achane</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 3</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--rb)">Ashton Jeanty</span>
+          <span class="name-chip">Saquon Barkley</span>
+          <span class="name-chip">Omarion Hampton</span>
+          <span class="name-chip">Derrick Henry</span>
+          <span class="name-chip hl" style="--pos-c:var(--rb)">Chase Brown</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 4</span><div class="tier-names">
+          <span class="name-chip">Kyren Williams</span>
+          <span class="name-chip">Josh Jacobs</span>
+          <span class="name-chip">James Cook</span>
+          <span class="name-chip">Kenneth Walker III</span>
+          <span class="name-chip">Breece Hall</span>
+          <span class="name-chip">Jeremiyah Love</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Late</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--rb)">Chuba Hubbard</span>
+          <span class="name-chip hl" style="--pos-c:var(--rb)">Jordan Mason</span>
+          <span class="name-chip">Bucky Irving</span>
+          <span class="name-chip">Jonathon Brooks</span>
+        </div></div>
+        <p class="tier-note">Gibbs over Bijan is defensible now that David Montgomery is out of Detroit.
+        Tier 2 is all talent, all situation-risk: Taylor's QB health, McCaffrey's age and 2025 workload,
+        Achane's new coach/QB/scheme in Miami. Jeanty is the year-two bounce-back the new Raiders staff
+        is built around. Late: Hubbard and Mason are the cheap volume; Brooks is polarizing — analysts
+        split on his price.</p>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3><span class="pos-chip"><i style="background:var(--wr)"></i>WIDE RECEIVER</span></h3>
+        <p class="card-sub">Deepest position — but the elite PPR anchors are gone by pick 15</p>
+        <div class="tier-row"><span class="tier-tag">Tier 1</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--wr)">Ja'Marr Chase</span>
+          <span class="name-chip hl" style="--pos-c:var(--wr)">Puka Nacua</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 2</span><div class="tier-names">
+          <span class="name-chip">Justin Jefferson</span>
+          <span class="name-chip">CeeDee Lamb</span>
+          <span class="name-chip">Amon-Ra St. Brown</span>
+          <span class="name-chip">Jaxon Smith-Njigba</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 3</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--wr)">Drake London</span>
+          <span class="name-chip">Nico Collins</span>
+          <span class="name-chip">A.J. Brown</span>
+          <span class="name-chip">Malik Nabers</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 4</span><div class="tier-names">
+          <span class="name-chip">Tee Higgins</span>
+          <span class="name-chip">Garrett Wilson</span>
+          <span class="name-chip hl" style="--pos-c:var(--wr)">Ladd McConkey</span>
+          <span class="name-chip">Marvin Harrison Jr.</span>
+          <span class="name-chip">Tetairoa McMillan</span>
+          <span class="name-chip">Rashee Rice</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Late</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--wr)">Stefon Diggs</span>
+          <span class="name-chip hl" style="--pos-c:var(--wr)">Xavier Worthy</span>
+          <span class="name-chip">Josh Downs</span>
+          <span class="name-chip">Jayden Reed</span>
+          <span class="name-chip">Jalen Coker</span>
+        </div></div>
+        <p class="tier-note">Chase is the WR1 in the league's best passing offense; Nacua has averaged
+        nearly 10 targets a game for three years. London has graduated into true-WR1 territory.
+        McConkey at the end of round 3 is the price sharp drafters are embracing. Diggs — now a
+        Commander — around round 10 is the veteran discount of the year.</p>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3><span class="pos-chip"><i style="background:var(--te)"></i>TIGHT END</span></h3>
+        <p class="card-sub">Pay for the top two or wait — the middle is where drafts go to die</p>
+        <div class="tier-row"><span class="tier-tag">Tier 1</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--te)">Brock Bowers</span>
+          <span class="name-chip hl" style="--pos-c:var(--te)">Trey McBride</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 2</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--te)">Colston Loveland</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 3</span><div class="tier-names">
+          <span class="name-chip">Sam LaPorta</span>
+          <span class="name-chip">George Kittle</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Late</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--te)">Chig Okonkwo</span>
+        </div></div>
+        <p class="tier-note">Bowers and McBride are a genuine two-man tier; a new Raiders offense could
+        unlock Bowers' ceiling. Loveland broke out late in his rookie year and is the one player with a
+        shot to join them. LaPorta is the swing pick: Detroit's new coordinator, Drew Petzing, funneled
+        the offense through McBride in Arizona — but LaPorta is coming off a back injury that ended his
+        2025. Kittle post-Achilles at 33 is a fade at cost. Okonkwo, now Washington's TE1, is the
+        free square in the last rounds.</p>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3><span class="pos-chip"><i style="background:var(--qb)"></i>QUARTERBACK</span></h3>
+        <p class="card-sub">One king, a flat middle class — patience is the whole strategy</p>
+        <div class="tier-row"><span class="tier-tag">Tier 1</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--qb)">Josh Allen</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 2</span><div class="tier-names">
+          <span class="name-chip">Jayden Daniels</span>
+          <span class="name-chip hl" style="--pos-c:var(--qb)">Lamar Jackson</span>
+          <span class="name-chip">Jalen Hurts</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Tier 3</span><div class="tier-names">
+          <span class="name-chip">Joe Burrow</span>
+          <span class="name-chip">Drake Maye</span>
+        </div></div>
+        <div class="tier-row"><span class="tier-tag">Late</span><div class="tier-names">
+          <span class="name-chip hl" style="--pos-c:var(--qb)">Jordan Love</span>
+        </div></div>
+        <p class="tier-note">Allen has finished top-2 at the position six straight seasons — even his
+        "down" 2025 volume still won the week-to-week war. Daniels edges Lamar on most models, but
+        Lamar's post-dip discount is the better price. Mahomes and Caleb Williams are the two fades:
+        Mahomes' career-high rushing came before a major knee injury, and Williams' ADP assumes a leap
+        the situation hasn't earned. In a 10-teamer, someone from Tier 2–3 is always there in rounds 6–9.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Edges</p>
+    <h2>Values to chase, prices to dodge</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>Draft these at cost</h3>
+        <p class="card-sub">Players the market is underpricing, with the round to strike</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th>Round</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Lamar Jackson</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · BAL</span></td><td class="num">3–4</td><td class="p-note">Discounted after a down 2025 — elite rebound profile at a non-elite price.</td></tr>
+            <tr><td><span class="p-name">Chase Brown</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · CIN</span></td><td class="num">2–3</td><td class="p-note">Keeps falling past ADP in expert mocks; three-down role in a top offense.</td></tr>
+            <tr><td><span class="p-name">Ladd McConkey</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · LAC</span></td><td class="num">3–4</td><td class="p-note">Target ceiling + QB stability; one of the best WR prices on the board.</td></tr>
+            <tr><td><span class="p-name">Colston Loveland</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · CHI</span></td><td class="num">4–5</td><td class="p-note">Late-2025 breakout; the only TE with a path into the Bowers/McBride tier.</td></tr>
+            <tr><td><span class="p-name">Sam LaPorta</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · DET</span></td><td class="num">5–6</td><td class="p-note">New Lions OC Drew Petzing built Arizona's offense through the TE. Top-5 upside if the back holds.</td></tr>
+            <tr><td><span class="p-name">Xavier Worthy</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · KC</span></td><td class="num">5–6</td><td class="p-note">League-winner speed profile in the Chiefs offense.</td></tr>
+            <tr><td><span class="p-name">Stefon Diggs</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · WAS</span></td><td class="num">9–10</td><td class="p-note">Signed with the Commanders; proven target-earner going three rounds too late.</td></tr>
+            <tr><td><span class="p-name">Josh Downs</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · IND</span></td><td class="num">10+</td><td class="p-note">PPR slot floor with untapped ceiling — ideal WR4.</td></tr>
+            <tr><td><span class="p-name">Jordan Love</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · GB</span></td><td class="num">10+</td><td class="p-note">The late-QB target if you punt the position entirely.</td></tr>
+            <tr><td><span class="p-name">Chig Okonkwo</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · WAS</span></td><td class="num">12+</td><td class="p-note">Walks into the Commanders' TE1 role for free.</td></tr>
+            <tr><td><span class="p-name">Chuba Hubbard</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · CAR</span></td><td class="num">8+</td><td class="p-note">Boring, bankable touches at a late-round price.</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3>Let someone else pay it</h3>
+        <p class="card-sub">Fine players, wrong prices — the gap between cost and likely outcome</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th>Cost</th><th>The problem</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Christian McCaffrey</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · SF</span></td><td class="num">1.05</td><td class="p-note">Turns 30, led the NFL in carries in 2025, extensive injury file. The trifecta.</td></tr>
+            <tr><td><span class="p-name">Patrick Mahomes</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · KC</span></td><td class="num">QB5-ish</td><td class="p-note">2025's QB4 finish leaned on career-high rushing — now coming off a major knee injury.</td></tr>
+            <tr><td><span class="p-name">De'Von Achane</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · MIA</span></td><td class="num">R1</td><td class="p-note">New coach, new scheme, and Malik Willis at QB may siphon the goal-line work. Talent survives it; the price assumes it thrives.</td></tr>
+            <tr><td><span class="p-name">Saquon Barkley</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · PHI</span></td><td class="num">R2</td><td class="p-note">Age-29 season stacked on two years of enormous touch totals.</td></tr>
+            <tr><td><span class="p-name">TreVeyon Henderson</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · NE</span></td><td class="num">R4</td><td class="p-note">Priced like a workhorse; the role isn't one yet.</td></tr>
+            <tr><td><span class="p-name">George Kittle</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · SF</span></td><td class="num">R5</td><td class="p-note">Tore his Achilles late in 2025 and turns 33 in-season. History is unkind to both.</td></tr>
+            <tr><td><span class="p-name">Caleb Williams</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · CHI</span></td><td class="num">QB8-ish</td><td class="p-note">ADP prices in a leap; take the same price range's safer floors instead.</td></tr>
+            <tr><td><span class="p-name">Luther Burden III</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · CHI</span></td><td class="num">R7</td><td class="p-note">Hype has outrun the target share.</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The 2026 class</p>
+    <h2>Rookies worth knowing</h2>
+    <div class="card">
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Player</th><th>Situation</th><th>Draft call</th></tr></thead>
+        <tbody>
+          <tr><td><span class="p-name">Jeremiyah Love</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · ARI</span></td><td class="p-note">No. 3 overall — the first top-5 RB since Saquon Barkley in 2018. Doak Walker winner, 6.9 yards a carry over his last two Notre Dame seasons. Opens behind veterans in a crowded backfield.</td><td class="p-note">Rounds 3–4. The talent is round-1; the early-season role isn't. He's the rookie to own by November.</td></tr>
+          <tr><td><span class="p-name">Carnell Tate</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · TEN</span></td><td class="p-note">First rookie WR off the board in most drafts.</td><td class="p-note">Rounds 7–8 as an upside WR3/4.</td></tr>
+          <tr><td><span class="p-name">Jordyn Tyson · Makai Lemon</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR</span></td><td class="p-note">The next two rookie receivers in consensus rankings.</td><td class="p-note">Double-digit rounds; bench stashes.</td></tr>
+          <tr><td><span class="p-name">Jadarian Price · Nicholas Singleton · Jonah Coleman</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB</span></td><td class="p-note">Best of the RB class behind Love.</td><td class="p-note">Late darts — only with a visible path to touches.</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="tier-note">Base rates, before you fall in love: fewer than 15% of rookie WRs and under
+      25% of rookie RBs finish top-24 at their position. Draft the path to touches, not the highlight reel.</p>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The plan</p>
+    <h2>Round-by-round, by draft slot</h2>
+    <p class="section-sub">
+      Three scripts for a 10-team snake. The shared spine: hammer RB and WR through round 5,
+      take one shot at Bowers/McBride if the board offers it, land a QB in rounds 6–9, and
+      spend every late pick on upside — rookies, handcuffs, and the sleeper list above.
+      Kicker and D/ST go in the last two rounds. Always.
+    </p>
+    <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));">
+
+      <div class="card" style="margin-top:0;">
+        <h3>Picks 1–3 · The anchor slot</h3>
+        <p class="card-sub">You get a true difference-maker; your R2 pick comes at the wheel</p>
+        <div class="plan-step"><span class="plan-rounds">R1</span><div><b>Bijan, Gibbs, or Chase.</b> All three are correct; Gibbs has the cleanest 2026 setup with Montgomery gone.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R2</span><div>At pick 18–20: <b>Bowers/McBride</b> if one is there, else best WR standing (Nabers, Collins).</div></div>
+        <div class="plan-step"><span class="plan-rounds">R3–5</span><div>Two more RB/WR — target <b>Chase Brown, McConkey, Loveland</b> as they slide.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R6–9</span><div>QB from tier 2–3 (<b>Lamar</b> is the priority), plus FLEX depth.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R10+</span><div>Sleepers and handcuffs: <b>Diggs, Downs, Okonkwo</b>, your RB1's backup.</div></div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3>Picks 4–7 · The minefield</h3>
+        <p class="card-sub">The CMC/Achane zone — discipline here wins the draft</p>
+        <div class="plan-step"><span class="plan-rounds">R1</span><div>Prefer <b>Taylor or Jefferson</b> over McCaffrey/Achane at the same cost — same ceiling, fewer ways to zero.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R2</span><div>Pair the opener: RB1 → <b>elite WR</b> (ARSB, JSN); WR1 → <b>Jeanty/Hampton</b>.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R3–5</span><div>Leave with 3 RB/WR starters minimum. <b>Allen occasionally slips to R3 here — take him.</b></div></div>
+        <div class="plan-step"><span class="plan-rounds">R6–9</span><div>QB if you passed on Allen; add a high-floor WR (<b>Higgins, G. Wilson</b> types linger).</div></div>
+        <div class="plan-step"><span class="plan-rounds">R10+</span><div>Upside only. A bench of safe veterans wins nothing.</div></div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3>Picks 8–10 · The turn</h3>
+        <p class="card-sub">Back-to-back picks — draft in pairs, plan two tiers at once</p>
+        <div class="plan-step"><span class="plan-rounds">R1–2</span><div>Two from the 8–13 shelf: <b>Jeanty + ARSB</b>, or <b>Lamb + Saquon</b> if his age discount appeals. Double RB is live here too.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R3–4</span><div>Next turn: <b>McBride</b> often survives to ~22 — pair him with a tier-3 WR.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R5–6</span><div><b>Jeremiyah Love</b> tends to land right at this turn. So does LaPorta if you skipped TE.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R7–9</span><div>QB + third RB. At the turn you can start a positional run instead of chasing one.</div></div>
+        <div class="plan-step"><span class="plan-rounds">R10+</span><div>Pairs of darts: rookie WR + handcuff each turn.</div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Logistics</p>
+    <h2>ESPN room notes &amp; draft-day checklist</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>Know your ESPN room</h3>
+        <ul class="clean">
+          <li><b>Confirm the scoring before anything else.</b> ESPN defaults to full PPR — half-PPR or standard changes the whole top of this board (RBs and TD-dependent players rise).</li>
+          <li><b>ESPN's draft-room ranks are ESPN's, not consensus.</b> Casual rooms follow the default list, so players ESPN is low on (check the values table) fall further than this board suggests — let them come to you.</li>
+          <li><b>Pre-rank your queue.</b> Load ~20 favorites into the player queue before the draft; if your connection drops, autopick drafts from your queue, not ESPN's list.</li>
+          <li><b>Mock in the actual lobby.</b> Two or three ESPN mock drafts from your real slot beats any article — including this one.</li>
+          <li><b>Roster math:</b> 9 starters, 7 bench. With one of each K/D/ST that leaves 14 picks for skill players — roughly 5 RB, 5–6 WR, 1–2 QB, 1–2 TE.</li>
+          <li><b>Playoffs are weeks 15–17.</b> A cupcake late-season schedule is a real tiebreaker between similar players.</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>The last 24 hours</h3>
+        <ul class="clean">
+          <li><b>Re-check ADP the morning of the draft</b> — August camp news moves players a full round in days. This board is a mid-August snapshot.</li>
+          <li><b>Scrub the injury report.</b> Verify Kittle (Achilles), LaPorta (back), Taylor's QB situation, and any preseason knocks before trusting a price here.</li>
+          <li><b>Write down your tier cutoffs</b> for RB and WR — when a tier is one player deep on the clock, take it.</li>
+          <li><b>Never draft K or D/ST before the last two rounds</b>, even when a run starts. Especially when a run starts.</li>
+          <li><b>Draft one handcuff</b> — your own RB1's backup, not a stranger's.</li>
+          <li><b>Leave with upside.</b> The last four picks should all be players with a story to become weekly starters by October.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Sources</b> — rankings and ADP synthesized from public analysis, August 2026:</p>
+    <ul>
+      <li><a href="https://sports.yahoo.com/fantasy/article/2026-fantasy-football-full-ppr-rankings-consensus-top-300-players-175205585.html">Yahoo Sports consensus top-300 PPR rankings</a></li>
+      <li><a href="https://www.espn.com/fantasy/football/story/_/page/FFDraftGuide26-48677635/2026-fantasy-football-rankings-mock-draft-cheat-sheets-sleepers">ESPN 2026 Fantasy Draft Guide</a></li>
+      <li><a href="https://www.espn.com/fantasy/football/story/_/page/FFSleepBustBreak26-49030808/fantasy-football-2026-rankings-nfl-sleepers-breakouts-busts">ESPN sleepers, busts &amp; breakouts</a></li>
+      <li><a href="https://www.rotowire.com/football/adp.php">RotoWire ADP, August 2026</a></li>
+      <li><a href="https://www.fantasypros.com/nfl/adp/ppr-overall.php">FantasyPros PPR ADP</a></li>
+      <li><a href="https://www.rotowire.com/football/article/12-team-ppr-mock-draft-2026-full-board-pick-by-pick-analysis-124378">RotoWire 12-team PPR mock draft</a></li>
+      <li><a href="https://www.fantasypoints.com/nfl/articles/2026/players-to-avoid-and-overvalues">Fantasy Points: players to avoid</a></li>
+      <li><a href="https://www.nfl.com/news/2026-nfl-fantasy-football-six-late-round-sleepers-to-target">NFL.com late-round sleepers</a></li>
+      <li><a href="https://www.nbcsports.com/fantasy/football/news/2026-fantasy-football-tight-end-tiers-brock-bowers-and-trey-mcbride-fighting-for-te1-spot">NBC Sports TE tiers</a></li>
+      <li><a href="https://www.cbssports.com/nfl/news/2026-nfl-rookie-running-back-rankings-fantasy-football/">CBS Sports rookie RB rankings</a></li>
+      <li><a href="https://www.cbssports.com/fantasy/football/news/heath-cummings-fantasy-football-quarterback-tiers/">CBS Sports QB tiers</a></li>
+      <li><a href="https://www.si.com/fantasy/football-snake-draft-strategies-2026">SI snake draft strategies</a></li>
+    </ul>
+    <p>ADP values are approximate consensus as of mid-August 2026 and move daily — treat every number
+    here as a starting point and verify against your live draft room. Not affiliated with ESPN.</p>
+  </footer>
+
+</div>
+
+<div id="tooltip" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* Approximate consensus ADP, mid-August 2026, PPR. flag: v=value, f=fade, r=rookie */
+  var PLAYERS = [
+    { adp: 1,  name: "Bijan Robinson",      pos: "RB", team: "ATL", note: "Consensus 1.01. Three-down monster." },
+    { adp: 2,  name: "Ja'Marr Chase",       pos: "WR", team: "CIN", note: "WR1 overall; PPR anchor in the league's best passing game." },
+    { adp: 3,  name: "Puka Nacua",          pos: "WR", team: "LAR", note: "~10 targets a game for three straight years." },
+    { adp: 4,  name: "Jahmyr Gibbs",        pos: "RB", team: "DET", flag: "v", note: "Montgomery gone — full workload at last." },
+    { adp: 5,  name: "Christian McCaffrey", pos: "RB", team: "SF",  flag: "f", note: "Age 30, led NFL in carries in 2025, injury history." },
+    { adp: 6,  name: "Jonathan Taylor",     pos: "RB", team: "IND", note: "RB1 ceiling; monitor Daniel Jones' health." },
+    { adp: 7,  name: "Justin Jefferson",    pos: "WR", team: "MIN", note: "Elite as ever; some analysts call the price rich." },
+    { adp: 8,  name: "De'Von Achane",       pos: "RB", team: "MIA", flag: "f", note: "New coach, new scheme, Malik Willis at QB." },
+    { adp: 9,  name: "CeeDee Lamb",         pos: "WR", team: "DAL", note: "Target hog; safe floor, top-3 WR ceiling." },
+    { adp: 10, name: "Ashton Jeanty",       pos: "RB", team: "LV",  flag: "v", note: "Year-2 bounce; Kubiak offense built around him." },
+    { adp: 11, name: "Saquon Barkley",      pos: "RB", team: "PHI", flag: "f", note: "Age 29 + two seasons of massive touch counts." },
+    { adp: 12, name: "Amon-Ra St. Brown",   pos: "WR", team: "DET", note: "The PPR floor king." },
+    { adp: 13, name: "Jaxon Smith-Njigba",  pos: "WR", team: "SEA", note: "Coming off a monster 2025." },
+    { adp: 14, name: "Omarion Hampton",     pos: "RB", team: "LAC", note: "Year-2 leap candidate with the backfield to himself." },
+    { adp: 15, name: "Drake London",        pos: "WR", team: "ATL", note: "Graduated into legitimate WR1 territory." },
+    { adp: 16, name: "Derrick Henry",       pos: "RB", team: "BAL", note: "Keeps mocking the age curve; steal if it holds once more." },
+    { adp: 17, name: "Brock Bowers",        pos: "TE", team: "LV",  note: "TE1. New offense could unlock the full ceiling." },
+    { adp: 18, name: "Nico Collins",        pos: "WR", team: "HOU", note: "Alpha target share when healthy." },
+    { adp: 19, name: "A.J. Brown",          pos: "WR", team: "PHI", note: "Market is split on the price; falls in real mocks." },
+    { adp: 20, name: "Malik Nabers",        pos: "WR", team: "NYG", note: "Target monster regardless of QB." },
+    { adp: 21, name: "Chase Brown",         pos: "RB", team: "CIN", flag: "v", note: "Slides past ADP in expert mocks; take the gift." },
+    { adp: 22, name: "Trey McBride",        pos: "TE", team: "ARI", note: "Co-TE1; elite target share." },
+    { adp: 23, name: "Kyren Williams",      pos: "RB", team: "LAR", note: "Steady volume, TD-dependent scoring." },
+    { adp: 24, name: "Josh Allen",          pos: "QB", team: "BUF", note: "Six straight top-2 QB finishes. His own tier." },
+    { adp: 25, name: "Josh Jacobs",         pos: "RB", team: "GB",  note: "TD volume keeps the floor high." },
+    { adp: 26, name: "Tee Higgins",         pos: "WR", team: "CIN", note: "WR2 with WR1 stretches when healthy." },
+    { adp: 27, name: "Lamar Jackson",       pos: "QB", team: "BAL", flag: "v", note: "Discounted after the 2025 dip — the rebound bet." },
+    { adp: 28, name: "Jayden Daniels",      pos: "QB", team: "WAS", note: "Rushing floor makes his bad weeks fine." },
+    { adp: 29, name: "Garrett Wilson",      pos: "WR", team: "NYJ", note: "Volume is never the question." },
+    { adp: 30, name: "James Cook",          pos: "RB", team: "BUF", note: "Efficient lead back in an elite offense." },
+    { adp: 31, name: "Kenneth Walker III",  pos: "RB", team: "SEA", note: "Explosive; health is the swing." },
+    { adp: 32, name: "Breece Hall",         pos: "RB", team: "NYJ", note: "Talent discount after a muddled 2025." },
+    { adp: 33, name: "Ladd McConkey",       pos: "WR", team: "LAC", flag: "v", note: "Sharp drafters are embracing this price." },
+    { adp: 34, name: "Jeremiyah Love",      pos: "RB", team: "ARI", flag: "r", note: "No. 3 overall pick; eased in behind veterans early." },
+    { adp: 35, name: "Marvin Harrison Jr.", pos: "WR", team: "ARI", note: "Third-year leap or bust-out — priced for the middle." },
+    { adp: 36, name: "Tetairoa McMillan",   pos: "WR", team: "CAR", note: "Carolina's clear No. 1 target." },
+    { adp: 37, name: "Colston Loveland",    pos: "TE", team: "CHI", flag: "v", note: "Late-rookie-year breakout; tier-1 TE upside." },
+    { adp: 38, name: "Rashee Rice",         pos: "WR", team: "KC",  note: "Target-per-snap elite when on the field." },
+    { adp: 39, name: "Jalen Hurts",         pos: "QB", team: "PHI", note: "The rushing-TD cheat code persists." },
+    { adp: 40, name: "TreVeyon Henderson",  pos: "RB", team: "NE",  flag: "f", note: "Priced like a workhorse; role isn't one yet." },
+    { adp: 41, name: "Davante Adams",       pos: "WR", team: "LAR", note: "Route-running ages last." },
+    { adp: 42, name: "Brian Thomas Jr.",    pos: "WR", team: "JAX", note: "Consensus ~WR24 after a down 2025; bounce-back case." },
+    { adp: 43, name: "Sam LaPorta",         pos: "TE", team: "DET", flag: "v", note: "New OC funnels through TEs; back injury is the risk." },
+    { adp: 44, name: "Joe Burrow",          pos: "QB", team: "CIN", note: "Pocket production alone keeps him top-8." },
+    { adp: 45, name: "Xavier Worthy",       pos: "WR", team: "KC",  flag: "v", note: "League-winner speed profile." },
+    { adp: 46, name: "Bucky Irving",        pos: "RB", team: "TB",  note: "Market cooled; PPR chops remain." },
+    { adp: 47, name: "Jaylen Waddle",       pos: "WR", team: "MIA", note: "Cheap for the talent; offense is the worry." },
+    { adp: 48, name: "George Kittle",       pos: "TE", team: "SF",  flag: "f", note: "Post-Achilles at 33 — history is unkind." }
+  ];
+
+  /* Fixed lane / stack order (validated palette order): RB, WR, TE, QB */
+  var LANES = ["RB", "WR", "TE", "QB"];
+  var LANE_LABELS = { RB: "Running back", WR: "Wide receiver", TE: "Tight end", QB: "Quarterback" };
+  var POS_VAR = { RB: "--rb", WR: "--wr", TE: "--te", QB: "--qb" };
+  var FLAGS = { v: ["VALUE", "value"], f: ["FADE", "fade"], r: ["ROOKIE", "rookie"] };
+  var NS = "http://www.w3.org/2000/svg";
+
+  function el(tag, attrs, parent) {
+    var node = document.createElementNS(NS, tag);
+    for (var key in attrs) node.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+  function cssVar(name) { return "var(" + name + ")"; }
+  function posRank(player) {
+    var rank = 0;
+    for (var i = 0; i < PLAYERS.length; i++) {
+      if (PLAYERS[i].pos === player.pos) {
+        rank++;
+        if (PLAYERS[i] === player) return rank;
+      }
+    }
+    return rank;
+  }
+
+  /* ---------- legend (shared, fixed order) ---------- */
+  var legend = document.getElementById("legend");
+  LANES.forEach(function (pos) {
+    var span = document.createElement("span");
+    var swatch = document.createElement("i");
+    swatch.style.background = cssVar(POS_VAR[pos]);
+    span.appendChild(swatch);
+    span.appendChild(document.createTextNode(LANE_LABELS[pos]));
+    legend.appendChild(span);
+  });
+
+  /* ---------- tooltip ---------- */
+  var tooltip = document.getElementById("tooltip");
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    moveTip(evt);
+  }
+  function moveTip(evt) {
+    var x = (evt.clientX || 0) + 14, y = (evt.clientY || 0) + 14;
+    var rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth - 8) x = evt.clientX - rect.width - 14;
+    if (y + rect.height > window.innerHeight - 8) y = evt.clientY - rect.height - 14;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+  }
+  function hideTip() { tooltip.style.display = "none"; }
+  function tipHTML(p) {
+    return '<div class="tt-name">' + p.name + '</div>' +
+      '<div class="tt-meta">' + p.pos + posRank(p) + ' · ' + p.team +
+      ' · ADP ' + p.adp + '</div>' +
+      (p.note ? '<div>' + p.note + '</div>' : '');
+  }
+  function bindTip(node, html) {
+    node.addEventListener("mouseenter", function (e) { showTip(e, html); });
+    node.addEventListener("mousemove", moveTip);
+    node.addEventListener("mouseleave", hideTip);
+    node.addEventListener("focus", function () {
+      var r = node.getBoundingClientRect();
+      showTip({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }, html);
+    });
+    node.addEventListener("blur", hideTip);
+  }
+
+  /* ---------- chart 1: lanes ---------- */
+  (function lanesChart() {
+    var W = 960, padL = 118, padR = 20, padT = 26, laneH = 52, axisH = 34;
+    var H = padT + LANES.length * laneH + axisH;
+    var innerW = W - padL - padR;
+    var maxPick = 49;
+    var x = function (pick) { return padL + (pick - 0.5) / maxPick * innerW; };
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", role: "img",
+      "aria-label": "Draft board: top 48 picks by consensus ADP, grouped into position lanes" });
+    document.getElementById("lanes-chart").appendChild(svg);
+
+    /* round bands + separators (10-team) */
+    for (var r = 0; r < 5; r++) {
+      var startPick = r * 10 + 0.5, endPick = Math.min(r * 10 + 10.5, maxPick);
+      if (r > 0) el("line", { x1: x(startPick), x2: x(startPick), y1: padT - 8,
+        y2: padT + LANES.length * laneH, stroke: cssVar("--grid"), "stroke-width": 1 }, svg);
+      var labelText = el("text", { x: (x(startPick) + x(endPick)) / 2, y: padT - 10, "text-anchor": "middle",
+        "font-size": 11, "font-weight": 600, fill: cssVar("--muted") }, svg);
+      labelText.textContent = "Round " + (r + 1);
+    }
+    /* baseline under lanes */
+    el("line", { x1: padL, x2: W - padR, y1: padT + LANES.length * laneH,
+      y2: padT + LANES.length * laneH, stroke: cssVar("--baseline"), "stroke-width": 1 }, svg);
+
+    /* x-axis ticks every 8 picks */
+    [1, 8, 16, 24, 32, 40, 48].forEach(function (pick) {
+      var tick = el("text", { x: x(pick), y: padT + LANES.length * laneH + 18, "text-anchor": "middle",
+        "font-size": 10.5, fill: cssVar("--muted"), style: "font-variant-numeric: tabular-nums" }, svg);
+      tick.textContent = pick;
+    });
+    var axisLabel = el("text", { x: W - padR, y: padT + LANES.length * laneH + 32, "text-anchor": "end",
+      "font-size": 10.5, fill: cssVar("--muted") }, svg);
+    axisLabel.textContent = "Consensus overall pick (ADP)";
+
+    /* lanes */
+    LANES.forEach(function (pos, i) {
+      var cy = padT + i * laneH + laneH / 2;
+      var count = PLAYERS.filter(function (p) { return p.pos === pos; }).length;
+      var lab = el("text", { x: padL - 12, y: cy - 2, "text-anchor": "end", "font-size": 12,
+        "font-weight": 700, fill: cssVar("--ink") }, svg);
+      lab.textContent = pos;
+      var sub = el("text", { x: padL - 12, y: cy + 12, "text-anchor": "end", "font-size": 10.5,
+        fill: cssVar("--muted") }, svg);
+      sub.textContent = count + " of 48";
+      el("line", { x1: padL, x2: W - padR, y1: cy, y2: cy, stroke: cssVar("--grid"),
+        "stroke-width": 1 }, svg);
+    });
+
+    /* dots + selective direct labels (first player per lane) */
+    var labeled = {};
+    PLAYERS.forEach(function (p) {
+      var laneIdx = LANES.indexOf(p.pos);
+      var cy = padT + laneIdx * laneH + laneH / 2;
+      var cx = x(p.adp);
+      var dot = el("circle", { cx: cx, cy: cy, r: 5.5, fill: cssVar(POS_VAR[p.pos]),
+        stroke: cssVar("--surface"), "stroke-width": 2, "class": "dot", tabindex: 0,
+        role: "img", "aria-label": p.name + ", " + p.pos + ", ADP " + p.adp }, svg);
+      /* enlarged hit target */
+      var hit = el("circle", { cx: cx, cy: cy, r: 12, fill: "transparent", "pointer-events": "all" }, svg);
+      bindTip(dot, tipHTML(p));
+      bindTip(hit, tipHTML(p));
+      if (!labeled[p.pos]) {
+        labeled[p.pos] = true;
+        var nameLabel = el("text", { x: cx - 2, y: cy - 12, "text-anchor": "start", "font-size": 10.5,
+          "font-weight": 600, fill: cssVar("--ink-2") }, svg);
+        nameLabel.textContent = p.name.replace(/^\S+\s/, "");
+      }
+    });
+  })();
+
+  /* ---------- chart 2: round composition, stacked horizontal bars ---------- */
+  (function roundChart() {
+    var rounds = [];
+    for (var r = 0; r < 5; r++) {
+      var counts = { RB: 0, WR: 0, TE: 0, QB: 0 }, total = 0;
+      PLAYERS.forEach(function (p) {
+        if (p.adp > r * 10 && p.adp <= r * 10 + 10) { counts[p.pos]++; total++; }
+      });
+      rounds.push({ label: "R" + (r + 1), counts: counts, total: total });
+    }
+
+    var W = 760, padL = 96, padR = 116, padT = 8, barH = 24, rowGap = 12, axisH = 6;
+    var H = padT + rounds.length * (barH + rowGap) + axisH;
+    var innerW = W - padL - padR;
+    var perUnit = innerW / 10;
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", role: "img",
+      "aria-label": "Positional makeup of each of the first five rounds" });
+    document.getElementById("round-chart").appendChild(svg);
+    var defs = el("defs", {}, svg);
+
+    rounds.forEach(function (round, i) {
+      var y = padT + i * (barH + rowGap);
+      var rowLabel = el("text", { x: padL - 12, y: y + barH / 2 + 4, "text-anchor": "end",
+        "font-size": 12, "font-weight": 700, fill: cssVar("--ink") }, svg);
+      rowLabel.textContent = round.label;
+
+      var clipId = "round-clip-" + i;
+      var clip = el("clipPath", { id: clipId }, defs);
+      el("rect", { x: padL, y: y, width: round.total * perUnit, height: barH, rx: 4 }, clip);
+
+      var group = el("g", { "clip-path": "url(#" + clipId + ")" }, svg);
+      var cursor = padL;
+      LANES.forEach(function (pos) {
+        var count = round.counts[pos];
+        if (!count) return;
+        var width = count * perUnit;
+        var seg = el("rect", { x: cursor + 1, y: y, width: width - 2, height: barH,
+          fill: cssVar(POS_VAR[pos]) }, group);
+        bindTip(seg, '<div class="tt-name">' + LANE_LABELS[pos] + 's</div>' +
+          '<div class="tt-meta">' + round.label + ' · ' + count + ' of ' + round.total + ' picks</div>');
+        if (width >= 26) {
+          var countLabel = el("text", { x: cursor + width / 2, y: y + barH / 2 + 4, "text-anchor": "middle",
+            "font-size": 11, "font-weight": 700, fill: cssVar("--surface") }, svg);
+          countLabel.textContent = count;
+        }
+        cursor += width;
+      });
+
+      var summary;
+      if (round.counts.RB >= 5) summary = "RB feeding frenzy";
+      else if (round.counts.WR >= 5) summary = "elite WR shelf";
+      else if (round.counts.QB >= 3) summary = "the QB wave";
+      else if (round.counts.TE >= 2) summary = "TE decision time";
+      else summary = "mixed board";
+      var sumLabel = el("text", { x: padL + round.total * perUnit + 10, y: y + barH / 2 + 4,
+        "font-size": 11, fill: cssVar("--muted") }, svg);
+      sumLabel.textContent = summary;
+    });
+  })();
+
+  /* ---------- big board table ---------- */
+  (function boardTable() {
+    var tbody = document.querySelector("#board-table tbody");
+    PLAYERS.forEach(function (p) {
+      var tr = document.createElement("tr");
+
+      var tdAdp = document.createElement("td");
+      tdAdp.className = "num";
+      tdAdp.textContent = p.adp;
+      tr.appendChild(tdAdp);
+
+      var tdName = document.createElement("td");
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "p-name";
+      nameSpan.textContent = p.name;
+      tdName.appendChild(nameSpan);
+      tr.appendChild(tdName);
+
+      var tdPos = document.createElement("td");
+      var chip = document.createElement("span");
+      chip.className = "pos-chip";
+      var swatch = document.createElement("i");
+      swatch.style.background = cssVar(POS_VAR[p.pos]);
+      chip.appendChild(swatch);
+      chip.appendChild(document.createTextNode(p.pos + posRank(p)));
+      tdPos.appendChild(chip);
+      tr.appendChild(tdPos);
+
+      var tdTeam = document.createElement("td");
+      tdTeam.textContent = p.team;
+      tr.appendChild(tdTeam);
+
+      var tdFlag = document.createElement("td");
+      if (p.flag) {
+        var f = FLAGS[p.flag];
+        var flagSpan = document.createElement("span");
+        flagSpan.className = "flag " + f[1];
+        flagSpan.textContent = f[0];
+        tdFlag.appendChild(flagSpan);
+      }
+      tr.appendChild(tdFlag);
+
+      var tdNote = document.createElement("td");
+      tdNote.className = "p-note";
+      tdNote.textContent = p.note || "";
+      tr.appendChild(tdNote);
+
+      tbody.appendChild(tr);
+    });
+  })();
+})();
+</script>
