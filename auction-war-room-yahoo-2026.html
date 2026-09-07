@@ -1,0 +1,996 @@
+<title>2026 Yahoo Auction War Room</title>
+<style>
+  /* ---------- theme tokens: light is the base, dark via media query + toggle ---------- */
+  :root {
+    --plane: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --accent: #1e5c41;          /* turf green — brand accent, not a series color */
+    --accent-ink: #ffffff;
+    --good: #006300;
+    --bad: #d03b3b;
+    --warn: #8a5a00;
+    --rb: #1baf7a;
+    --wr: #2a78d6;
+    --te: #eb6834;
+    --qb: #4a3aa7;
+    --other: #a8a69e;
+    --row-alt: #f4f3ef;
+    --tooltip-bg: #0b0b0b;
+    --tooltip-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      --plane: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --accent: #7fd0a0;
+      --accent-ink: #0d0d0d;
+      --good: #0ca30c;
+      --bad: #e66767;
+      --warn: #fab219;
+      --rb: #199e70;
+      --wr: #3987e5;
+      --te: #d95926;
+      --qb: #9085e9;
+      --other: #6b6a64;
+      --row-alt: #202020;
+      --tooltip-bg: #fcfcfb;
+      --tooltip-ink: #0b0b0b;
+    }
+  }
+  :root[data-theme="dark"] {
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --accent: #7fd0a0;
+    --accent-ink: #0d0d0d;
+    --good: #0ca30c;
+    --bad: #e66767;
+    --warn: #fab219;
+    --rb: #199e70;
+    --wr: #3987e5;
+    --te: #d95926;
+    --qb: #9085e9;
+    --other: #6b6a64;
+    --row-alt: #202020;
+    --tooltip-bg: #fcfcfb;
+    --tooltip-ink: #0b0b0b;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--plane);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    margin: 0;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px 72px; }
+
+  .masthead { padding: 44px 0 20px; border-bottom: 3px solid var(--accent); }
+  .kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 10px;
+  }
+  .masthead h1 {
+    font-size: clamp(30px, 5vw, 46px); font-weight: 800; letter-spacing: -0.02em;
+    line-height: 1.05; margin: 0 0 12px; text-wrap: balance; text-transform: uppercase;
+  }
+  .masthead p.lede { color: var(--ink-2); max-width: 62ch; margin: 0 0 18px; font-size: 15px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .meta-chip {
+    font-size: 12px; font-weight: 600; padding: 4px 10px; border: 1px solid var(--border);
+    border-radius: 999px; color: var(--ink-2); background: var(--surface);
+  }
+
+  section { margin-top: 44px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 6px;
+  }
+  section > h2 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; text-wrap: balance; }
+  .section-sub { color: var(--ink-2); font-size: 14px; margin: 0 0 18px; max-width: 68ch; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .tile .t-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .tile .t-value { font-size: 21px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
+  .tile .t-note { font-size: 12.5px; color: var(--ink-2); }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-top: 16px;
+  }
+  .card h3 { margin: 0 0 2px; font-size: 16px; font-weight: 700; }
+  .card .card-sub { color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
+
+  /* news feed */
+  .news { display: flex; flex-direction: column; }
+  .news-item { display: grid; grid-template-columns: 74px 104px 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--grid); font-size: 13.5px; align-items: start; }
+  .news-item:last-child { border-bottom: none; }
+  .news-date { color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding-top: 3px; }
+  .news-body { color: var(--ink-2); }
+  .news-body b { color: var(--ink); }
+  .tag {
+    display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; margin-top: 1px;
+  }
+  .tag.up { color: var(--good); }
+  .tag.down { color: var(--bad); }
+  .tag.out { color: var(--bad); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+  .tag.watch { color: var(--warn); }
+  .tag.info { color: var(--muted); }
+  @media (max-width: 560px) { .news-item { grid-template-columns: 1fr; gap: 4px; } }
+
+  .steps { counter-reset: step; }
+  .step { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--grid); }
+  .step:last-child { border-bottom: none; }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    flex: none; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .step div { font-size: 13.5px; color: var(--ink-2); }
+  .step b { color: var(--ink); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .chart-scroll { overflow-x: auto; position: relative; }
+  svg { display: block; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .dot { cursor: pointer; }
+  .dot:focus { outline: none; }
+  .dot:focus-visible { stroke: var(--ink); stroke-width: 2; }
+  #tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--tooltip-bg); color: var(--tooltip-ink);
+    font-size: 12.5px; line-height: 1.4; padding: 8px 11px; border-radius: 8px;
+    max-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  }
+  #tooltip .tt-name { font-weight: 700; }
+  #tooltip .tt-meta { opacity: 0.75; }
+
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th {
+    text-align: left; font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); font-weight: 700; padding: 8px 10px; border-bottom: 1px solid var(--baseline);
+    white-space: nowrap;
+  }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--row-alt); }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+  th.num { text-align: right; }
+  td.dim { color: var(--muted); }
+  td .p-name { font-weight: 600; white-space: nowrap; }
+  td .p-note { color: var(--ink-2); }
+  .pos-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+  .pos-chip i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; }
+  .flag { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; }
+  .flag.value { color: var(--good); }
+  .flag.fade { color: var(--bad); }
+  .flag.rookie { color: var(--muted); }
+  .flag.risk { color: var(--warn); }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 16px; }
+
+  ul.clean { margin: 0; padding-left: 20px; }
+  ul.clean li { margin: 6px 0; font-size: 13.5px; color: var(--ink-2); }
+  ul.clean li b { color: var(--ink); }
+
+  .calc-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .calc-field { display: flex; flex-direction: column; gap: 4px; }
+  .calc-field label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .calc-field input {
+    width: 120px; font-size: 18px; font-weight: 700; padding: 8px 10px;
+    border: 1px solid var(--baseline); border-radius: 8px;
+    background: var(--plane); color: var(--ink);
+    font-variant-numeric: tabular-nums; font-family: inherit;
+  }
+  .calc-field input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .calc-out { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+  .calc-tile {
+    flex: 1 1 140px; background: var(--plane); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .calc-tile .t-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .calc-tile .t-value { font-size: 26px; font-weight: 800; }
+  .calc-tile .t-note { font-size: 12px; color: var(--ink-2); }
+  .calc-warn { color: var(--bad); font-weight: 600; font-size: 13px; margin-top: 10px; display: none; }
+
+  .foot { margin-top: 56px; border-top: 1px solid var(--baseline); padding-top: 18px; font-size: 12.5px; color: var(--muted); }
+  .foot a { color: var(--accent); text-decoration: none; }
+  .foot a:hover, .foot a:focus-visible { text-decoration: underline; }
+  .foot ul { columns: 2; column-gap: 32px; margin: 8px 0 16px; padding-left: 18px; }
+  .foot li { margin: 3px 0; }
+  @media (max-width: 640px) { .foot ul { columns: 1; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="kicker">Yahoo Fantasy Football · Auction Draft · Updated Sept 7, 2026 · Kickoff in 3 days</p>
+    <h1>2026 Yahoo Auction War Room</h1>
+    <p class="lede">
+      The final-week edition, rebuilt for Yahoo's default league: $200 salary cap, 10 teams,
+      half-PPR, 15-man rosters. Every price below is news-adjusted through this weekend —
+      Josh Jacobs' exempt-list placement, Malik Nabers' Week 1 doubt, Puka's psoas, the
+      Green Bay backfield flip — and every section calls out where Yahoo's own dollar values
+      and default ranks diverge from reality, because that gap is where your auction is won.
+    </p>
+    <div class="meta-row">
+      <span class="meta-chip">$200 budget · min bid $1</span>
+      <span class="meta-chip">15 roster spots → max single bid $186</span>
+      <span class="meta-chip">10-team · Half-PPR (0.5 per catch)</span>
+      <span class="meta-chip">Lineup: QB · 2 RB · 2 WR · TE · FLEX · K · DEF · 6 Bench · 2 IR</span>
+      <span class="meta-chip">Values as of Sept 6–7, 2026</span>
+    </div>
+  </header>
+
+  <section>
+    <p class="eyebrow">Since the August board</p>
+    <h2>What changed, and what it costs</h2>
+    <p class="section-sub">
+      The news that moved prices between mid-August and kickoff week. Each line names the
+      price move on this board so you can bid on the current world, not last month's.
+    </p>
+    <div class="card">
+      <div class="news">
+        <div class="news-item"><span class="news-date">Aug 30</span><span class="tag out">Out</span><div class="news-body"><b>Josh Jacobs placed on the Commissioner's Exempt List.</b> Paid but barred from practice indefinitely; his first court date isn't until November. Off this board entirely — a $1 IR-slot stash at most. Green Bay also traded for Kaleb Johnson the same day.</div></div>
+        <div class="news-item"><span class="news-date">Aug 30</span><span class="tag up">Riser</span><div class="news-body"><b>MarShawn Lloyd is now Green Bay's lead back.</b> Finally healthy after two lost seasons, handled a workhorse role with the starters in preseason. Consensus jumped him ~60 spots to RB33. Priced $14 here — the biggest new name on the board, with an injury file attached.</div></div>
+        <div class="news-item"><span class="news-date">Sept 1–5</span><span class="tag watch">Watch</span><div class="news-body"><b>Malik Nabers: conflicting Week 1 reports</b> as he returns from a torn ACL. Priced $22 (down from $33) — elite ceiling, but pay for the ceiling only if you have bench depth to cover September.</div></div>
+        <div class="news-item"><span class="news-date">Late Aug</span><span class="tag watch">Watch</span><div class="news-body"><b>Puka Nacua: psoas injury cost him weeks of practice, plus off-field headlines</b> with a small residual suspension risk. Still a top-tier WR; trimmed to $46 (from $56). Yahoo's own value sits at $40 — if your room follows it, that's a discount on a top-3 receiver.</div></div>
+        <div class="news-item"><span class="news-date">Late Aug</span><span class="tag out">Out</span><div class="news-body"><b>Jayden Higgins (HOU) tore his ACL — out for the season</b>, and Tank Dell opens on IR. Nico Collins' target share gets even more concentrated (bumped to $32). Houston traded for Kayshon Boutte, who becomes the WR2 there at $4.</div></div>
+        <div class="news-item"><span class="news-date">Sept 2</span><span class="tag out">IR</span><div class="news-body"><b>Jordyn Tyson (NO) to short-term IR</b> with another hamstring; out at least four games, maybe eight. Don't roster in the auction — but Yahoo gives you <b>two IR slots</b>, so a $1 Tyson can sit in one from day one if nobody else bites.</div></div>
+        <div class="news-item"><span class="news-date">Sept 3</span><span class="tag down">Faller</span><div class="news-body"><b>Emeka Egbuka's toe injury threatens Week 1.</b> Fell seven spots in consensus; priced $14 here, well below where he went in August auctions.</div></div>
+        <div class="news-item"><span class="news-date">This week</span><span class="tag watch">Watch</span><div class="news-body"><b>Ashton Jeanty (ankle sprain)</b> was limited early in the week; Klint Kubiak says he's "optimistic" for Week 1, but rookie Mike Washington Jr. impressed enough that Vegas could ease him in. Held at $38 — the discount is already the price.</div></div>
+        <div class="news-item"><span class="news-date">Sept 1–4</span><span class="tag up">Riser</span><div class="news-body"><b>Sam LaPorta and Chris Godwin both climbed into the consensus top 75.</b> LaPorta ($12) is this board's favorite TE price; Godwin ($5) is a real WR3 for endgame money.</div></div>
+        <div class="news-item"><span class="news-date">Sept 4</span><span class="tag up">Cleared</span><div class="news-body"><b>Patrick Mahomes is reportedly 100%</b> after last season's ACL tear. Fair at $9 now — no longer a fade, still not a reach.</div></div>
+        <div class="news-item"><span class="news-date">Sept 4</span><span class="tag up">Cleared</span><div class="news-body"><b>Christian McCaffrey is practicing fully</b> after calf tightness and workload management in camp. The concern was never Week 1 — it's 413 touches last season at age 30. Yahoo prices him $43; this board stops at $40.</div></div>
+        <div class="news-item"><span class="news-date">Sept 1–5</span><span class="tag info">Minor</span><div class="news-body"><b>George Pickens (abductor), Tyler Warren (adductor strain), Mike Evans</b> all back at practice and trending toward Week 1. No price change beyond a dollar.</div></div>
+        <div class="news-item"><span class="news-date">Sept 3</span><span class="tag up">Riser</span><div class="news-body"><b>D'Andre Swift</b> gains security with Kyle Monangai week-to-week (knee). One of the more stable RB2 profiles left for $12.</div></div>
+        <div class="news-item"><span class="news-date">Aug 25–31</span><span class="tag up">Riser</span><div class="news-body"><b>De'Zhaun Stribling (SF, pick 33)</b> caught 11 of 13 preseason targets and shot to ADP ~121. Not a Week 1 starter — a $2–3 bench flier with midseason breakout range.</div></div>
+        <div class="news-item"><span class="news-date">Sept 3–6</span><span class="tag info">Consensus</span><div class="news-body"><b>Jahmyr Gibbs is now the consensus No. 1 overall</b>, ahead of Bijan, Puka, and Chase; <b>Trey McBride has passed Brock Bowers as TE1</b>; Josh Allen's ADP dipped slightly. Carnell Tate fell out of the top 75.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Know the room</p>
+    <h2>Yahoo is a different auction than ESPN</h2>
+    <div>
+      <div class="card">
+        <h3>The settings, and what they do to prices</h3>
+        <ul class="clean">
+          <li><b>Half-PPR.</b> A catch is worth half a point, so the volume premium shrinks: target hogs and pass-catching backs (St. Brown, Nacua, Achane, Kamara) lose a few dollars; touchdown and yardage backs (Henry, Kyren Williams, Taylor, Cook, Montgomery) gain them. Elite TEs lose a touch of separation.</li>
+          <li><b>2 WR + FLEX, not 3 WR.</b> Same starting shape as ESPN — nine starters — so WR depth is not a mandate. RB stays the scarcest asset.</li>
+          <li><b>15-man roster (6 bench) instead of 16.</b> One fewer $1 slot: max bid is $186, average per slot is $13.33. Your bench darts matter more, not less — there are fewer of them.</li>
+          <li><b>Two IR slots.</b> A genuinely different weapon: injured stashes (Tyson) don't cost you a bench spot. Draft for it.</li>
+          <li><b>Playoffs weeks 15–17 by default</b> (confirm in your league settings). Week 14 byes still bite.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Yahoo's dollar values are static — and RB-inflated</h3>
+        <p class="card-sub">The number in the draft room is the number most managers anchor on. Know where it's wrong.</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th class="num">Yahoo says</th><th class="num">This board</th><th>Read</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Jonathan Taylor</span></td><td class="num">$50</td><td class="num">$48</td><td class="p-note">Yahoo has him as RB3 — above Chase. Let someone pay it.</td></tr>
+            <tr><td><span class="p-name">James Cook</span></td><td class="num">$42</td><td class="num">$34</td><td class="p-note">The single most inflated value on Yahoo's sheet.</td></tr>
+            <tr><td><span class="p-name">Derrick Henry</span></td><td class="num">$41</td><td class="num">$38</td><td class="p-note">Half-PPR helps him, but age-32 at $41 is the wrong side of the curve.</td></tr>
+            <tr><td><span class="p-name">Christian McCaffrey</span></td><td class="num">$43</td><td class="num">$40</td><td class="p-note">Yahoo's price ignores the 413-touch season.</td></tr>
+            <tr><td><span class="p-name">Ja'Marr Chase</span></td><td class="num">$44</td><td class="num">$54</td><td class="p-note">Yahoo lists the WR1 below four running backs. Buy.</td></tr>
+            <tr><td><span class="p-name">Puka Nacua</span></td><td class="num">$40</td><td class="num">$46</td><td class="p-note">Injury discount already inside Yahoo's number.</td></tr>
+            <tr><td><span class="p-name">Jaxon Smith-Njigba</span></td><td class="num">$40</td><td class="num">$45</td><td class="p-note">Top-tier WR at a tier-2 sticker.</td></tr>
+            <tr><td><span class="p-name">Jahmyr Gibbs</span></td><td class="num">$55</td><td class="num">$62</td><td class="p-note">Even Yahoo's top value undersells the consensus 1.01.</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="card-sub" style="margin:12px 0 0;">Pattern: Yahoo's sheet pays up for running backs and discounts elite receivers. In a room that follows it, the play is the opposite of ESPN — <b>anchor with an elite WR (or two) and let the room overpay for RB2s.</b> Yahoo's default XRank also under-ranks Courtland Sutton, DJ Moore, and Bucky Irving relative to consensus — three cheap starters on this platform specifically.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Auction 101, second edition</p>
+    <h2>The rules — plus what your mock taught you</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>The seven rules, tightened</h3>
+        <div class="steps">
+          <div class="step"><div><b>Write max prices before you draft</b> — the "pay up to" column below is that list. Never go more than $2–3 over on a tier-1 target.</div></div>
+          <div class="step"><div><b>Nominate players you don't want.</b> Cook, Taylor, Henry, and McCaffrey are the perfect openers in a Yahoo room: the sheet tells everyone they're worth $40+.</div></div>
+          <div class="step"><div><b>Never show your hand early.</b> Chase and JSN are your targets? They surface after three or four RBs have drained the big spenders.</div></div>
+          <div class="step"><div><b>Three studs, not four.</b> Cap the elite spend at ~$150–155. The fourth stud is a luxury that costs you WR2 and TE.</div></div>
+          <div class="step"><div><b>Watch the room's money.</b> Yahoo shows every team's remaining budget. When three teams are under $20 with ten spots to fill, everything left is on sale.</div></div>
+          <div class="step"><div><b>Keep $30–40 for the rounds 5–7 window</b> — planned, not leftover. That's where Lamar, LaPorta, McConkey, Loveland, and the WR2s sell for half their value.</div></div>
+          <div class="step"><div><b>Keep $8–12 for the endgame</b> and spend all $200. A $0 max offer means every $2–4 player is unwinnable by rule.</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>Your ESPN mock, scored</h3>
+        <p class="card-sub">What worked, what didn't, and the fix for the real thing</p>
+        <ul class="clean">
+          <li><b>Buys: excellent.</b> Gibbs $58, Puka $56, Jeanty $38, Chase Brown $33 — every stud at or under list. That discipline is the hard part and you had it.</li>
+          <li><b>Shape: the problem.</b> $185 on four players left $15 for twelve spots and a $1 max bid from round 5 on. In that room Lamar went for $10, LaPorta $5, McConkey $15, Jameson Williams $17 — your two holes (WR2, TE) sold for lunch money while you couldn't bid.</li>
+          <li><b>Dodged:</b> Team 2's $53 St. Brown and $41 Saquon; Team 5 leaving $47 unspent; the $24 Allen war.</li>
+          <li><b>The fix:</b> drop the fourth stud. Same room, minus Chase Brown: Jameson Williams $18 + LaPorta $6 + $9 endgame ammo is a strictly stronger lineup.</li>
+          <li><b>Yahoo twist:</b> the room will overpay RBs by sheet, so your three studs should probably be two elite WRs and one RB — the reverse of your mock.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The five theses</p>
+    <h2>How to think about this auction</h2>
+    <div class="tiles" style="margin-top:14px;">
+      <div class="tile">
+        <span class="t-label">Platform edge</span>
+        <span class="t-value">Buy elite WRs</span>
+        <span class="t-note">Yahoo's sheet prices Chase, Puka, and JSN at $40–44 while pushing Taylor, Cook, and Henry to $41–50. Anchor with receivers, let the room fight over RB2s.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Top of market</span>
+        <span class="t-value">Gibbs is the 1.01</span>
+        <span class="t-note">Consensus No. 1 overall now, Yahoo's top value too. Pay up to $62 — the one player worth a small overpay.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Backfield news</span>
+        <span class="t-value">Green Bay flipped</span>
+        <span class="t-note">Jacobs is gone indefinitely. MarShawn Lloyd at $14 is the highest-upside mid-round RB on the board; Kaleb Johnson at $5 is the hedge.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Structure</span>
+        <span class="t-value">3 studs + $35 reserve</span>
+        <span class="t-note">The mock's lesson, made into a rule: elite spend capped near $155, with a planned $30–40 for the mid-auction discount window.</span>
+      </div>
+      <div class="tile">
+        <span class="t-label">Yahoo-only weapon</span>
+        <span class="t-value">2 IR slots</span>
+        <span class="t-note">A $1 Tyson goes straight to IR. Nabers' September risk costs you nothing if you have the bench to cover it. Draft with the IR in mind.</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The blueprint</p>
+    <h2>Three ways to spend $200 in half-PPR</h2>
+    <p class="section-sub">
+      Same $200, three philosophies, re-weighted for Yahoo's nine starters and six bench.
+      For your first real auction, run <b>Balanced</b> — and in a Yahoo room, make the WR
+      slice the elite one. "Rest" is bench darts plus kicker and defense.
+    </p>
+    <div class="card">
+      <h3>Budget allocation by build</h3>
+      <p class="card-sub">Dollars of the $200 cap committed to each position group · hover any segment for detail</p>
+      <div class="legend" id="build-legend"></div>
+      <div class="chart-scroll"><div id="build-chart" style="min-width:560px;"></div></div>
+      <div class="table-scroll" style="margin-top:14px;">
+        <table>
+          <thead><tr><th>Build</th><th>Shape</th><th>Who it suits</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Stars &amp; Scrubs</span></td><td class="p-note">Three or four elites (~$150–165), everyone else $1–3. Your mock, basically.</td><td class="p-note">High ceiling, waiver-wire lifestyle. Not for a first real auction.</td></tr>
+            <tr><td><span class="p-name">Balanced</span> <span class="flag value">RECOMMENDED</span></td><td class="p-note">Three studs (~$150), six or seven starters in the $12–30 band bought in the lull, $10 held for the endgame.</td><td class="p-note">Forgiving of one mistake, competitive everywhere. On Yahoo: two WR studs + one RB.</td></tr>
+            <tr><td><span class="p-name">Depth &amp; Value</span></td><td class="p-note">Nothing over ~$35. Hoard the mid-auction discounts, dominate the middle class.</td><td class="p-note">Best when the room overspends early — and Yahoo rooms following the sheet always do at RB.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The prices</p>
+    <h2>What the board should cost — half-PPR, kickoff week</h2>
+    <p class="section-sub">
+      This board's fair values for a $200, 10-team, half-PPR auction, adjusted for every item
+      in the news feed above. Where Yahoo publishes its own value for a player, it's shown
+      alongside so you can see the gap the room will anchor on.
+    </p>
+
+    <div class="card">
+      <h3>Where the money sits, by position</h3>
+      <p class="card-sub">Each dot is one player at this board's fair price · hover or tab to any dot for detail</p>
+      <div class="legend" id="legend"></div>
+      <div class="chart-scroll"><div id="lanes-chart" style="min-width:720px;"></div></div>
+    </div>
+
+    <div class="card">
+      <h3>The price board — top 48 with notes</h3>
+      <p class="card-sub">Flags: <span class="flag value">BUY</span> = pay list price happily · <span class="flag fade">AVOID</span> = let someone else pay it · <span class="flag risk">RISK</span> = health/availability discount already applied · <span class="flag rookie">ROOKIE</span></p>
+      <div class="table-scroll">
+        <table id="board-table">
+          <thead>
+            <tr>
+              <th class="num">Fair $</th><th class="num">Yahoo $</th><th>Player</th><th>Pos</th><th>Team</th><th>Flag</th><th>Note</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Beyond the top 48 — the middle class and the endgame</h3>
+      <p class="card-sub">Where the Balanced build actually gets built. Half-PPR prices, news-adjusted.</p>
+      <div class="table-scroll">
+        <table id="depth-table">
+          <thead>
+            <tr><th class="num">Fair $</th><th>Player</th><th>Pos</th><th>Team</th><th>Flag</th><th>Note</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Edges</p>
+    <h2>Where to spend, where to sit out</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>Pay list price happily</h3>
+        <p class="card-sub">Best price-versus-points gaps in a Yahoo room, with a ceiling bid</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th class="num">Pay up to</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">Ja'Marr Chase</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · CIN</span></td><td class="num">$56</td><td class="p-note">Yahoo shows $44. If the room follows the sheet, the WR1 is the cheapest elite on the board.</td></tr>
+            <tr><td><span class="p-name">Jahmyr Gibbs</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · DET</span></td><td class="num">$64</td><td class="p-note">The 1.01. Worth a small overpay in any format.</td></tr>
+            <tr><td><span class="p-name">Jaxon Smith-Njigba</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · SEA</span></td><td class="num">$47</td><td class="p-note">Top-tier consensus WR at Yahoo's $40 sticker.</td></tr>
+            <tr><td><span class="p-name">Lamar Jackson</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · BAL</span></td><td class="num">$19</td><td class="p-note">Went for $10 in your mock. Elite production at a mid-tier invoice — still the best line on any board.</td></tr>
+            <tr><td><span class="p-name">Chase Brown</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · CIN</span></td><td class="num">$33</td><td class="p-note">Half-PPR trims the receiving edge, but the three-down role in a top offense holds.</td></tr>
+            <tr><td><span class="p-name">Ladd McConkey</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · LAC</span></td><td class="num">$24</td><td class="p-note">WR1 target share at a WR2 price. Sold for $15 in your mock.</td></tr>
+            <tr><td><span class="p-name">Nico Collins</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · HOU</span></td><td class="num">$34</td><td class="p-note">Higgins' ACL and Dell's IR leave him the entire Houston passing game.</td></tr>
+            <tr><td><span class="p-name">MarShawn Lloyd</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · GB</span></td><td class="num">$16</td><td class="p-note">Lead back in a top offense for a bench price. Injury history is the only reason he's not $25.</td></tr>
+            <tr><td><span class="p-name">Sam LaPorta</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · DET</span></td><td class="num">$14</td><td class="p-note">Climbing consensus, new OC loves the position. Went for $5 in your mock.</td></tr>
+            <tr><td><span class="p-name">Colston Loveland</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · CHI</span></td><td class="num">$16</td><td class="p-note">Only TE with a path into the McBride/Bowers tier at a third of the price.</td></tr>
+            <tr><td><span class="p-name">Bucky Irving</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · TB</span></td><td class="num">$20</td><td class="p-note">Yahoo's XRank under-ranks him vs. consensus — a platform-specific discount.</td></tr>
+            <tr><td><span class="p-name">Courtland Sutton</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · DEN</span></td><td class="num">$13</td><td class="p-note">WR23 production ranked ~WR39 on Yahoo's default list. Ideal FLEX buy.</td></tr>
+            <tr><td><span class="p-name">DJ Moore</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · BUF</span></td><td class="num">$13</td><td class="p-note">Josh Allen's new X-receiver; Yahoo ranks him like a WR4.</td></tr>
+            <tr><td><span class="p-name">Chris Godwin Jr.</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · TB</span></td><td class="num">$6</td><td class="p-note">Rising into the top 75; a real WR3 for endgame money.</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:0;">
+        <h3>Sit out these bidding wars</h3>
+        <p class="card-sub">Yahoo's sticker vs. what this board would actually pay</p>
+        <div class="table-scroll">
+        <table>
+          <thead><tr><th>Player</th><th class="num">Yahoo</th><th class="num">My cap</th><th>The problem</th></tr></thead>
+          <tbody>
+            <tr><td><span class="p-name">James Cook</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · BUF</span></td><td class="num">$42</td><td class="num">$32</td><td class="p-note">Yahoo's most inflated value. Good back, RB1-overall sticker.</td></tr>
+            <tr><td><span class="p-name">Jonathan Taylor</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · IND</span></td><td class="num">$50</td><td class="num">$46</td><td class="p-note">Priced above Chase and McCaffrey. Nominate him first and watch.</td></tr>
+            <tr><td><span class="p-name">Derrick Henry</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · BAL</span></td><td class="num">$41</td><td class="num">$36</td><td class="p-note">Half-PPR is his best format; the age cliff still exists.</td></tr>
+            <tr><td><span class="p-name">Christian McCaffrey</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · SF</span></td><td class="num">$43</td><td class="num">$38</td><td class="p-note">Healthy today. 413 touches last year, age 30. Someone will pay $48.</td></tr>
+            <tr><td><span class="p-name">Josh Allen</span> <span class="pos-chip"><i style="background:var(--qb)"></i>QB · BUF</span></td><td class="num">—</td><td class="num">$18</td><td class="p-note">ADP slipping, DJ Moore added. Still the QB1; still not worth the gap to Lamar/Daniels.</td></tr>
+            <tr><td><span class="p-name">Saquon Barkley</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · PHI</span></td><td class="num">—</td><td class="num">$36</td><td class="p-note">Went $41 in your mock; age-29 on two monster-touch seasons.</td></tr>
+            <tr><td><span class="p-name">Malik Nabers</span> <span class="pos-chip"><i style="background:var(--wr)"></i>WR · NYG</span></td><td class="num">—</td><td class="num">$22</td><td class="p-note">Not a fade on talent — a cap. If Week 1 is in doubt, the September floor is zero.</td></tr>
+            <tr><td><span class="p-name">TreVeyon Henderson</span> <span class="pos-chip"><i style="background:var(--rb)"></i>RB · NE</span></td><td class="num">—</td><td class="num">$8</td><td class="p-note">Still priced like a workhorse; still not one.</td></tr>
+            <tr><td><span class="p-name">George Kittle</span> <span class="pos-chip"><i style="background:var(--te)"></i>TE · SF</span></td><td class="num">—</td><td class="num">$4</td><td class="p-note">Post-Achilles at 33. The name costs more than the outlook.</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="card-sub" style="margin:12px 0 0;">"My cap" is where this board stops. If the room lets one of these fall under it, that's not a fade anymore — that's a value. Prices change everything.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Tools</p>
+    <h2>Nomination playbook &amp; live budget math</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>What to nominate, in order — Yahoo edition</h3>
+        <div class="steps">
+          <div class="step"><div><b>Openers (your first 3–4 turns):</b> the RBs Yahoo's sheet overprices — <b>Taylor, Cook, Henry, McCaffrey</b>. The room sees $41–50 on screen and bids to it. Not your money.</div></div>
+          <div class="step"><div><b>Early-middle:</b> hype names just below elite — Jeanty (the ankle will spark debate), Saquon, Jeremiyah Love. Keep draining budgets.</div></div>
+          <div class="step"><div><b>Middle:</b> float your real targets one at a time — <b>Chase, JSN, Puka</b> if they haven't come up, then Lamar, McConkey, Loveland, Lloyd — while the RB spenders sit at $15.</div></div>
+          <div class="step"><div><b>Late:</b> nominate kickers and defenses while <i>other</i> managers still have money; every $2 they spend there is $2 that can't outbid your Godwin/Sutton/Stribling endgame.</div></div>
+          <div class="step"><div><b>Warning, still:</b> price enforcement is how you end up owning a $38 James Cook. Bid only what you'd happily pay.</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>Live budget calculator — 15-man roster</h3>
+        <p class="card-sub">Keep this open during the draft; enter your state after each win</p>
+        <div class="calc-row">
+          <div class="calc-field">
+            <label for="calc-spent">$ spent so far</label>
+            <input id="calc-spent" type="number" min="0" max="200" value="0" inputmode="numeric">
+          </div>
+          <div class="calc-field">
+            <label for="calc-filled">Roster spots filled</label>
+            <input id="calc-filled" type="number" min="0" max="15" value="0" inputmode="numeric">
+          </div>
+        </div>
+        <div class="calc-out">
+          <div class="calc-tile"><div class="t-label">Budget left</div><div class="t-value" id="out-left">$200</div><div class="t-note">of $200</div></div>
+          <div class="calc-tile"><div class="t-label">Max single bid</div><div class="t-value" id="out-max">$186</div><div class="t-note">keeps $1 for every open spot</div></div>
+          <div class="calc-tile"><div class="t-label">Avg per open spot</div><div class="t-value" id="out-avg">$13.33</div><div class="t-note">across <span id="out-open">15</span> spots left</div></div>
+        </div>
+        <p class="calc-warn" id="calc-warn">Check those numbers — that combination isn't possible in a $200 / 15-spot auction.</p>
+        <p class="card-sub" style="margin:14px 0 0;">Checkpoints from your mock: after three studs you should still hold ~$50 with 12 spots open (avg $4+). If the average per open spot is under $3 before your starting nine are full, you've overspent. Over $20 at the halfway mark means you're too shy.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">Logistics</p>
+    <h2>Yahoo room notes &amp; the last 72 hours</h2>
+    <div class="grid-2">
+      <div class="card" style="margin-top:0;">
+        <h3>Know your Yahoo room</h3>
+        <ul class="clean">
+          <li><b>Defaults:</b> $200 cap, $1 minimum, 15 spots all bought at auction, half-PPR, 4-point passing TDs. Confirm scoring and roster in League Settings before the draft — a commissioner tweak to 3 WR or full PPR changes this board.</li>
+          <li><b>The player list defaults to XRank</b> (Yahoo's analysts + RotoWire blend) with a static dollar value beside it. Most of your room drafts off that column. The Yahoo-mispricing table above is your map of where it's wrong.</li>
+          <li><b>Yahoo enforces your max bid</b> and shows every team's remaining budget in the draft room. Live in that panel.</li>
+          <li><b>Short bid clock, resets on every bid.</b> Ceilings get decided before nomination, never during the countdown.</li>
+          <li><b>Autodraft is unforgiving:</b> if you drop, Yahoo bids conservatively off its own values. Pre-rank your list (Draft → Pre-Draft Rankings) and keep the app open as a backup.</li>
+          <li><b>Two IR slots</b> mean a $1 Tyson stash costs no bench space. Nabers is <i>not</i> IR-eligible unless designated — that risk needs a real bench body behind it.</li>
+        </ul>
+      </div>
+      <div class="card" style="margin-top:0;">
+        <h3>Between now and the draft</h3>
+        <ul class="clean">
+          <li><b>Thursday/Friday injury reports are the last word.</b> Re-check Nabers, Egbuka, Jeanty, Pickens, and Puka on the final report before the draft; a downgrade moves each $5–10.</li>
+          <li><b>Mark 20–25 targets across price bands</b> with your personal max — the "pay up to" column is the starting draft.</li>
+          <li><b>Write two anchor paths:</b> (A) Chase + JSN + Chase Brown ≈ $135; (B) Gibbs + Chase ≈ $118 + a $30 RB2. Both leave $35 for the lull.</li>
+          <li><b>Budget $8–12 for the endgame</b> — Godwin, Sutton, Boutte, Stribling, Okonkwo are all sub-$6 players who start games in October.</li>
+          <li><b>$1 kicker, $1 defense.</b> Nominate everyone else's early.</li>
+          <li><b>Week 1 is Thursday.</b> If the auction is late in the week, players on Thursday-night teams need to be drafted before kickoff — check your draft time against the schedule.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <p><b>Sources</b> — values and news synthesized from public reporting through September 6–7, 2026:</p>
+    <ul>
+      <li><a href="https://help.yahoo.com/kb/SLN6489.html">Yahoo Help: default league settings</a></li>
+      <li><a href="https://www.rotowire.com/football/article/2026-fantasy-football-auction-values-excel-printable-cheat-sheet-132443">RotoWire: 2026 auction values incl. Yahoo's (Sept 5)</a></li>
+      <li><a href="https://www.rotowire.com/football/article/2026-fantasy-football-adp-exploiting-the-default-rankings-on-yahoo-127808">RotoWire: exploiting Yahoo's default ranks</a></li>
+      <li><a href="https://www.si.com/onsi/fantasy/rankings/yahoo-fantasy-football-rankings-adp-steal-value-2026">SI: three steals on the Yahoo platform</a></li>
+      <li><a href="https://www.nbcsports.com/fantasy/football/player-news/2026-08-30/josh-jacobs-placed-on-commissioners-exempt-list">NBC Sports: Jacobs to Commissioner Exempt List</a></li>
+      <li><a href="https://www.fantasylife.com/articles/fantasy/josh-jacobs-update-fantasy-football-marshawn-lloyd-kaleb-johnson">Fantasy Life: Lloyd &amp; Kaleb Johnson after Jacobs</a></li>
+      <li><a href="https://www.fantasypros.com/2026/09/20-fantasy-football-injuries-to-monitor-2026/">FantasyPros: 20 injuries to monitor (Sept 5)</a></li>
+      <li><a href="https://www.fantasypros.com/2026/09/14-fantasy-football-adp-risers-fallers-2026/">FantasyPros: ADP risers &amp; fallers (Sept)</a></li>
+      <li><a href="https://sports.yahoo.com/fantasy/article/2026-fantasy-football-marshawn-lloyd-treveyon-henderson-among-biggest-adp-risers-fallers-as-of-sept-1-142718983.html">Yahoo Sports: risers/fallers as of Sept 1</a></li>
+      <li><a href="https://www.bleachernation.com/fantasy-football-cheat-sheet/">Bleacher Nation cheat sheet (updated Sept 3)</a></li>
+      <li><a href="https://sports.yahoo.com/articles/christian-mccaffrey-injury-latest-49ers-171745301.html">Yahoo Sports: McCaffrey Week 1 status</a></li>
+      <li><a href="https://www.fantasylife.com/articles/fantasy/is-dezhaun-stribling-the-best-buy-in-fantasy-football-for-2026">Fantasy Life: Stribling's preseason</a></li>
+      <li><a href="https://www.draftsharks.com/auction-values/half-ppr">Draft Sharks half-PPR auction values</a></li>
+      <li><a href="https://www.fantasyalarm.com/articles/nfl/fantasy-football-draft-guide/2026-fantasy-football-auction-draft-strategy/191514">Fantasy Alarm auction strategy</a></li>
+    </ul>
+    <p>Fair values are this board's estimates for a $200 / 10-team / half-PPR / 15-man auction as of
+    September 7, 2026. "Yahoo $" values are Yahoo's published auction values as compiled by RotoWire on
+    September 5 and are shown only where published. Prices move daily in kickoff week — verify against
+    the final injury reports and your live draft room. The ESPN full-PPR edition of this war room
+    remains available separately. Not affiliated with Yahoo or ESPN.</p>
+  </footer>
+
+</div>
+
+<div id="tooltip" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* This board's fair values: $200 / 10-team / half-PPR / 15-man, news-adjusted to Sept 7, 2026.
+     yahoo: Yahoo's published auction value where available (RotoWire compilation, Sept 5).
+     flag: b=buy, a=avoid, r=rookie, k=risk */
+  var PLAYERS = [
+    { val: 62, yahoo: 55, name: "Jahmyr Gibbs",        pos: "RB", team: "DET", flag: "b", note: "Consensus 1.01 now. Montgomery gone; full workload his." },
+    { val: 59, yahoo: 51, name: "Bijan Robinson",      pos: "RB", team: "ATL", note: "The other elite RB anchor; fair at Yahoo's number plus a few." },
+    { val: 54, yahoo: 44, name: "Ja'Marr Chase",       pos: "WR", team: "CIN", flag: "b", note: "Yahoo lists the WR1 below four RBs. The platform's best buy." },
+    { val: 48, yahoo: 50, name: "Jonathan Taylor",     pos: "RB", team: "IND", flag: "a", note: "Half-PPR helps him; Yahoo's $50 sticker is still too rich." },
+    { val: 46, yahoo: 40, name: "Puka Nacua",          pos: "WR", team: "LAR", flag: "k", note: "Psoas + off-field noise; trimmed $10. Yahoo's $40 already prices the risk." },
+    { val: 46, name: "Justin Jefferson",    pos: "WR", team: "MIN", note: "Elite as ever; half-PPR nudges him under Chase." },
+    { val: 45, yahoo: 40, name: "Jaxon Smith-Njigba",  pos: "WR", team: "SEA", flag: "b", note: "Top-tier consensus; tier-2 sticker on Yahoo." },
+    { val: 44, name: "CeeDee Lamb",         pos: "WR", team: "DAL", note: "Target hog, safe floor." },
+    { val: 42, name: "Saquon Barkley",      pos: "RB", team: "PHI", flag: "a", note: "Half-PPR is kind to him; age-29 workload isn't. Cap $36." },
+    { val: 40, yahoo: 43, name: "Christian McCaffrey", pos: "RB", team: "SF",  flag: "a", note: "Healthy; 413 touches last year at 30. Stop at $38." },
+    { val: 40, yahoo: 37, name: "De'Von Achane",       pos: "RB", team: "MIA", note: "Half-PPR trims the receiving edge; new coach, Malik Willis at QB." },
+    { val: 38, yahoo: 41, name: "Derrick Henry",       pos: "RB", team: "BAL", flag: "a", note: "His format — but age 32 at Yahoo's $41 is the wrong side of the curve." },
+    { val: 38, name: "Ashton Jeanty",       pos: "RB", team: "LV",  flag: "k", note: "Ankle sprain; Kubiak 'optimistic' for Week 1. Discount already applied." },
+    { val: 38, name: "Amon-Ra St. Brown",   pos: "WR", team: "DET", note: "The volume king loses a few dollars to half-PPR." },
+    { val: 36, name: "Omarion Hampton",     pos: "RB", team: "LAC", note: "Year-2 leap, backfield to himself." },
+    { val: 35, name: "Drake London",        pos: "WR", team: "ATL", note: "True WR1 territory." },
+    { val: 34, yahoo: 42, name: "James Cook",          pos: "RB", team: "BUF", flag: "a", note: "Yahoo's most inflated value. Nominate him early." },
+    { val: 32, name: "Nico Collins",        pos: "WR", team: "HOU", flag: "b", note: "Higgins (ACL) and Dell (IR) out — the whole passing game is his." },
+    { val: 32, name: "Chase Brown",         pos: "RB", team: "CIN", flag: "b", note: "Three-down role in a top offense; keeps going under list." },
+    { val: 30, name: "Trey McBride",        pos: "TE", team: "ARI", note: "Consensus TE1 now. Positional monopoly pricing." },
+    { val: 28, yahoo: 30, name: "Brock Bowers",        pos: "TE", team: "LV",  note: "Held back by Raiders dysfunction in 2025; the ceiling is intact." },
+    { val: 27, name: "A.J. Brown",          pos: "WR", team: "NE",  note: "New team, Drake Maye throwing. Market is split; let the room set it." },
+    { val: 27, name: "Kyren Williams",      pos: "RB", team: "LAR", note: "TD-and-volume back — half-PPR is his best format." },
+    { val: 26, name: "Kenneth Walker III",  pos: "RB", team: "KC",  note: "New home in Kansas City; explosive when healthy." },
+    { val: 24, name: "Tee Higgins",         pos: "WR", team: "CIN", note: "WR1 stretches when healthy; TD upside plays well here." },
+    { val: 22, name: "Malik Nabers",        pos: "WR", team: "NYG", flag: "k", note: "Conflicting Week 1 reports post-ACL. Ceiling price only with bench cover." },
+    { val: 22, name: "Breece Hall",         pos: "RB", team: "NYJ", note: "Talent discount after a muddled 2025." },
+    { val: 22, name: "Garrett Wilson",      pos: "WR", team: "NYJ", note: "Volume is never the question." },
+    { val: 22, name: "Ladd McConkey",       pos: "WR", team: "LAC", flag: "b", note: "WR1 target share at a WR2 price." },
+    { val: 22, name: "Josh Allen",          pos: "QB", team: "BUF", flag: "a", note: "ADP dipping; DJ Moore added. Still not worth the gap to Lamar." },
+    { val: 21, name: "George Pickens",      pos: "WR", team: "DAL", note: "Big-play profile gains in half-PPR; abductor cleared." },
+    { val: 20, name: "Bucky Irving",        pos: "RB", team: "TB",  flag: "b", note: "Under-ranked by Yahoo's XRank vs. consensus." },
+    { val: 18, name: "Jeremiyah Love",      pos: "RB", team: "ARI", flag: "r", note: "No. 3 overall pick; eased in behind veterans early." },
+    { val: 17, name: "Lamar Jackson",       pos: "QB", team: "BAL", flag: "b", note: "Went for $10 in your mock. Best line on any board." },
+    { val: 16, name: "Jayden Daniels",      pos: "QB", team: "WAS", note: "Rushing floor makes bad weeks fine." },
+    { val: 16, name: "Marvin Harrison Jr.", pos: "WR", team: "ARI", note: "Priced for the middle outcome." },
+    { val: 16, name: "Tetairoa McMillan",   pos: "WR", team: "CAR", note: "Carolina's clear No. 1 target." },
+    { val: 16, name: "Rashee Rice",         pos: "WR", team: "KC",  note: "Target-per-snap elite when on the field." },
+    { val: 14, name: "Colston Loveland",    pos: "TE", team: "CHI", flag: "b", note: "Only TE with a path to tier 1 at a third of the price." },
+    { val: 14, name: "MarShawn Lloyd",      pos: "RB", team: "GB",  flag: "b", note: "Lead back after Jacobs' exempt-list placement. Injury history is the discount." },
+    { val: 14, name: "Emeka Egbuka",        pos: "WR", team: "TB",  flag: "k", note: "Toe injury threatens Week 1; down from ~$24 in August rooms." },
+    { val: 13, name: "Jalen Hurts",         pos: "QB", team: "PHI", note: "The rushing-TD cheat code, fairly priced." },
+    { val: 12, name: "Sam LaPorta",         pos: "TE", team: "DET", flag: "b", note: "Climbing; new OC funnels through TEs." },
+    { val: 12, name: "D'Andre Swift",       pos: "RB", team: "CHI", note: "Monangai week-to-week; stable RB2 profile." },
+    { val: 12, name: "Courtland Sutton",    pos: "WR", team: "DEN", flag: "b", note: "WR23 production ranked ~WR39 on Yahoo." },
+    { val: 12, name: "DJ Moore",            pos: "WR", team: "BUF", flag: "b", note: "Allen's new X-receiver; Yahoo ranks him like a WR4." },
+    { val: 11, name: "Xavier Worthy",       pos: "WR", team: "KC",  note: "League-winner speed; half-PPR rewards the big plays." },
+    { val: 9,  name: "Patrick Mahomes",     pos: "QB", team: "KC",  note: "Reportedly 100% post-ACL. Fair here, not a reach." }
+  ];
+
+  var DEPTH = [
+    { val: 10, name: "Cam Skattebo",        pos: "RB", team: "NYG", note: "Bruising role; TD equity in half-PPR." },
+    { val: 10, name: "Jaylen Warren",       pos: "RB", team: "PIT", note: "Splits with Rico Dowdle under McCarthy; the 1A." },
+    { val: 10, name: "Quinshon Judkins",    pos: "RB", team: "CLE", note: "Volume on a run-first team." },
+    { val: 9,  name: "Tony Pollard",        pos: "RB", team: "TEN", note: "Low-end RB2 going later than that." },
+    { val: 9,  name: "Tyler Warren",        pos: "TE", team: "IND", note: "Adductor strain minor; TE1 role." },
+    { val: 9,  name: "Javonte Williams",    pos: "RB", team: "DAL", note: "Lead-back touches; went $27 in your mock — don't." },
+    { val: 9,  name: "Jameson Williams",    pos: "WR", team: "DET", note: "Big-play WR2 who gains in half-PPR." },
+    { val: 9,  name: "DeVonta Smith",       pos: "WR", team: "PHI", note: "Reliable WR2/3 floor." },
+    { val: 9,  name: "Zay Flowers",         pos: "WR", team: "BAL", note: "Lamar's No. 1; TD upside." },
+    { val: 8,  name: "Terry McLaurin",      pos: "WR", team: "WAS", note: "Daniels' top target; aging gracefully." },
+    { val: 8,  name: "David Montgomery",    pos: "RB", team: "HOU", note: "TD back in Houston — a half-PPR specialist." },
+    { val: 8,  name: "Alvin Kamara",        pos: "RB", team: "NO",  note: "Half-PPR trims the receiving value; still a $1 steal if he falls." },
+    { val: 8,  name: "TreVeyon Henderson",  pos: "RB", team: "NE",  flag: "a", note: "Priced like a workhorse; the role isn't one." },
+    { val: 7,  name: "Rico Dowdle",         pos: "RB", team: "PIT", note: "The other half of the Steelers split; reunited with McCarthy." },
+    { val: 7,  name: "Mike Evans",          pos: "WR", team: "TB",  note: "Back at practice; the TD floor never left." },
+    { val: 6,  name: "Chuba Hubbard",       pos: "RB", team: "CAR", note: "Bankable touches, boring by design." },
+    { val: 6,  name: "Jordan Mason",        pos: "RB", team: "MIN", note: "Cheap volume; half-PPR friendly." },
+    { val: 5,  name: "Chris Godwin Jr.",    pos: "WR", team: "TB",  flag: "b", note: "Rising into the top 75. WR3 for endgame money." },
+    { val: 5,  name: "Kaleb Johnson",       pos: "RB", team: "GB",  note: "Traded in after Jacobs; the Lloyd hedge." },
+    { val: 5,  name: "Travis Hunter",       pos: "WR", team: "JAX", note: "Upside stash; the bench player with league-winner range." },
+    { val: 4,  name: "Kayshon Boutte",      pos: "WR", team: "HOU", note: "Traded to Houston; WR2 there after Higgins' ACL." },
+    { val: 4,  name: "George Kittle",       pos: "TE", team: "SF",  flag: "a", note: "Post-Achilles at 33." },
+    { val: 4,  name: "Stefon Diggs",        pos: "WR", team: "WAS", note: "Veteran discount; target-earner in a new home." },
+    { val: 3,  name: "De'Zhaun Stribling",  pos: "WR", team: "SF",  flag: "r", note: "Preseason star (11 of 13 targets); midseason breakout range." },
+    { val: 3,  name: "Josh Downs",          pos: "WR", team: "IND", note: "PPR floor, even at half rate." },
+    { val: 2,  name: "Chig Okonkwo",        pos: "TE", team: "WAS", note: "Washington's TE1 role for free." },
+    { val: 2,  name: "Jaylin Noel",         pos: "WR", team: "HOU", note: "Slot targets open up behind Collins." },
+    { val: 1,  name: "Jordyn Tyson",        pos: "WR", team: "NO",  flag: "k", note: "Short-term IR (4–8 weeks). Only as a $1 IR-slot stash." }
+  ];
+
+  /* Fixed lane / stack order (validated palette order): RB, WR, TE, QB (+ neutral Rest) */
+  var LANES = ["RB", "WR", "TE", "QB"];
+  var LANE_LABELS = { RB: "Running back", WR: "Wide receiver", TE: "Tight end", QB: "Quarterback" };
+  var POS_VAR = { RB: "--rb", WR: "--wr", TE: "--te", QB: "--qb" };
+  var FLAGS = { b: ["BUY", "value"], a: ["AVOID", "fade"], r: ["ROOKIE", "rookie"], k: ["RISK", "risk"] };
+  var NS = "http://www.w3.org/2000/svg";
+
+  function el(tag, attrs, parent) {
+    var node = document.createElementNS(NS, tag);
+    for (var key in attrs) node.setAttribute(key, attrs[key]);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+  function cssVar(name) { return "var(" + name + ")"; }
+  function posRank(player) {
+    var rank = 0;
+    for (var i = 0; i < PLAYERS.length; i++) {
+      if (PLAYERS[i].pos === player.pos) {
+        rank++;
+        if (PLAYERS[i] === player) return rank;
+      }
+    }
+    return rank;
+  }
+
+  /* ---------- tooltip ---------- */
+  var tooltip = document.getElementById("tooltip");
+  function showTip(evt, html) {
+    tooltip.innerHTML = html;
+    tooltip.style.display = "block";
+    moveTip(evt);
+  }
+  function moveTip(evt) {
+    var x = (evt.clientX || 0) + 14, y = (evt.clientY || 0) + 14;
+    var rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth - 8) x = evt.clientX - rect.width - 14;
+    if (y + rect.height > window.innerHeight - 8) y = evt.clientY - rect.height - 14;
+    tooltip.style.left = x + "px";
+    tooltip.style.top = y + "px";
+  }
+  function hideTip() { tooltip.style.display = "none"; }
+  function tipHTML(p) {
+    return '<div class="tt-name">' + p.name + '</div>' +
+      '<div class="tt-meta">' + p.pos + posRank(p) + ' · ' + p.team + ' · fair $' + p.val +
+      (p.yahoo ? ' · Yahoo $' + p.yahoo : '') + '</div>' +
+      (p.note ? '<div>' + p.note + '</div>' : '');
+  }
+  function bindTip(node, html) {
+    node.addEventListener("mouseenter", function (e) { showTip(e, html); });
+    node.addEventListener("mousemove", moveTip);
+    node.addEventListener("mouseleave", hideTip);
+    node.addEventListener("focus", function () {
+      var r = node.getBoundingClientRect();
+      showTip({ clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }, html);
+    });
+    node.addEventListener("blur", hideTip);
+  }
+
+  /* ---------- shared legend builder ---------- */
+  function buildLegend(target, entries) {
+    entries.forEach(function (entry) {
+      var span = document.createElement("span");
+      var swatch = document.createElement("i");
+      swatch.style.background = cssVar(entry[0]);
+      span.appendChild(swatch);
+      span.appendChild(document.createTextNode(entry[1]));
+      target.appendChild(span);
+    });
+  }
+  buildLegend(document.getElementById("legend"), LANES.map(function (pos) {
+    return [POS_VAR[pos], LANE_LABELS[pos]];
+  }));
+  buildLegend(document.getElementById("build-legend"), LANES.map(function (pos) {
+    return [POS_VAR[pos], LANE_LABELS[pos]];
+  }).concat([["--other", "Rest (bench · K · DEF)"]]));
+
+  /* ---------- chart: budget builds, stacked horizontal bars ---------- */
+  (function buildChart() {
+    var BUILDS = [
+      { label: "Stars & Scrubs", spend: { RB: 92, WR: 74, TE: 5,  QB: 8,  Rest: 21 } },
+      { label: "Balanced",       spend: { RB: 84, WR: 66, TE: 15, QB: 15, Rest: 20 } },
+      { label: "Depth & Value",  spend: { RB: 64, WR: 54, TE: 22, QB: 20, Rest: 40 } }
+    ];
+    var ORDER = ["RB", "WR", "TE", "QB", "Rest"];
+    var VARS = { RB: "--rb", WR: "--wr", TE: "--te", QB: "--qb", Rest: "--other" };
+    var TIP_LABEL = { RB: "Running backs", WR: "Wide receivers", TE: "Tight end", QB: "Quarterback", Rest: "Bench + K + DEF" };
+
+    var W = 760, padL = 118, padR = 16, padT = 8, barH = 26, rowGap = 14, axisH = 26;
+    var H = padT + BUILDS.length * (barH + rowGap) + axisH;
+    var innerW = W - padL - padR;
+    var perDollar = innerW / 200;
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", role: "img",
+      "aria-label": "Three ways to allocate a 200 dollar auction budget across positions" });
+    document.getElementById("build-chart").appendChild(svg);
+    var defs = el("defs", {}, svg);
+
+    BUILDS.forEach(function (build, i) {
+      var y = padT + i * (barH + rowGap);
+      var rowLabel = el("text", { x: padL - 12, y: y + barH / 2 + 4, "text-anchor": "end",
+        "font-size": 12, "font-weight": 700, fill: cssVar("--ink") }, svg);
+      rowLabel.textContent = build.label;
+
+      var clipId = "build-clip-" + i;
+      var clip = el("clipPath", { id: clipId }, defs);
+      el("rect", { x: padL, y: y, width: 200 * perDollar, height: barH, rx: 4 }, clip);
+
+      var group = el("g", { "clip-path": "url(#" + clipId + ")" }, svg);
+      var cursor = padL;
+      ORDER.forEach(function (key) {
+        var dollars = build.spend[key];
+        if (!dollars) return;
+        var width = dollars * perDollar;
+        var seg = el("rect", { x: cursor + 1, y: y, width: width - 2, height: barH,
+          fill: cssVar(VARS[key]) }, group);
+        bindTip(seg, '<div class="tt-name">' + TIP_LABEL[key] + '</div>' +
+          '<div class="tt-meta">' + build.label + ' · $' + dollars + ' of $200 (' +
+          Math.round(dollars / 2) + '%)</div>');
+        if (width >= 30) {
+          var segLabel = el("text", { x: cursor + width / 2, y: y + barH / 2 + 4, "text-anchor": "middle",
+            "font-size": 11, "font-weight": 700, fill: cssVar("--surface") }, svg);
+          segLabel.textContent = "$" + dollars;
+        }
+        cursor += width;
+      });
+    });
+
+    [0, 50, 100, 150, 200].forEach(function (dollars) {
+      var x = padL + dollars * perDollar;
+      var tick = el("text", { x: x, y: H - 8, "text-anchor": dollars === 200 ? "end" : (dollars === 0 ? "start" : "middle"),
+        "font-size": 10.5, fill: cssVar("--muted"), style: "font-variant-numeric: tabular-nums" }, svg);
+      tick.textContent = "$" + dollars;
+    });
+  })();
+
+  /* ---------- chart: price lanes ---------- */
+  (function lanesChart() {
+    var W = 960, padL = 118, padR = 20, padT = 24, laneH = 56, axisH = 34;
+    var H = padT + LANES.length * laneH + axisH;
+    var innerW = W - padL - padR;
+    var maxVal = 68;
+    var x = function (val) { return padL + val / maxVal * innerW; };
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", role: "img",
+      "aria-label": "Fair auction price of the top 48 players, grouped into position lanes" });
+    document.getElementById("lanes-chart").appendChild(svg);
+
+    for (var dollars = 10; dollars <= 60; dollars += 10) {
+      el("line", { x1: x(dollars), x2: x(dollars), y1: padT - 6,
+        y2: padT + LANES.length * laneH, stroke: cssVar("--grid"), "stroke-width": 1 }, svg);
+      var gLabel = el("text", { x: x(dollars), y: padT - 10, "text-anchor": "middle",
+        "font-size": 10.5, fill: cssVar("--muted"), style: "font-variant-numeric: tabular-nums" }, svg);
+      gLabel.textContent = "$" + dollars;
+    }
+    el("line", { x1: padL, x2: W - padR, y1: padT + LANES.length * laneH,
+      y2: padT + LANES.length * laneH, stroke: cssVar("--baseline"), "stroke-width": 1 }, svg);
+    var axisLabel = el("text", { x: W - padR, y: padT + LANES.length * laneH + 20, "text-anchor": "end",
+      "font-size": 10.5, fill: cssVar("--muted") }, svg);
+    axisLabel.textContent = "Fair price ($200 budget, half-PPR)";
+
+    LANES.forEach(function (pos, i) {
+      var cy = padT + i * laneH + laneH / 2;
+      var group = PLAYERS.filter(function (p) { return p.pos === pos; });
+      var total = group.reduce(function (sum, p) { return sum + p.val; }, 0);
+      var lab = el("text", { x: padL - 12, y: cy - 2, "text-anchor": "end", "font-size": 12,
+        "font-weight": 700, fill: cssVar("--ink") }, svg);
+      lab.textContent = pos;
+      var sub = el("text", { x: padL - 12, y: cy + 12, "text-anchor": "end", "font-size": 10.5,
+        fill: cssVar("--muted") }, svg);
+      sub.textContent = group.length + " players · $" + total;
+      el("line", { x1: padL, x2: W - padR, y1: cy, y2: cy, stroke: cssVar("--grid"),
+        "stroke-width": 1 }, svg);
+    });
+
+    /* dots + selective direct labels (most expensive per lane).
+       Same price in the same lane would stack exactly — nudge duplicates down. */
+    var labeled = {}, seen = {};
+    PLAYERS.forEach(function (p) {
+      var laneIdx = LANES.indexOf(p.pos);
+      var dupKey = p.pos + ":" + p.val;
+      seen[dupKey] = (seen[dupKey] || 0) + 1;
+      var n = seen[dupKey] - 1;
+      var nudge = (n % 2 === 1 ? -1 : 1) * Math.ceil(n / 2) * 12;   /* 0, -12, +12, -24 … stays inside the lane */
+      var cy = padT + laneIdx * laneH + laneH / 2 + nudge;
+      var cx = x(p.val);
+      var dot = el("circle", { cx: cx, cy: cy, r: 5.5, fill: cssVar(POS_VAR[p.pos]),
+        stroke: cssVar("--surface"), "stroke-width": 2, "class": "dot", tabindex: 0,
+        role: "img", "aria-label": p.name + ", " + p.pos + ", " + p.val + " dollars" }, svg);
+      var hit = el("circle", { cx: cx, cy: cy, r: 12, fill: "transparent", "pointer-events": "all" }, svg);
+      bindTip(dot, tipHTML(p));
+      bindTip(hit, tipHTML(p));
+      if (!labeled[p.pos]) {
+        labeled[p.pos] = true;
+        var nameLabel = el("text", { x: cx + 2, y: cy - 12, "text-anchor": "end", "font-size": 10.5,
+          "font-weight": 600, fill: cssVar("--ink-2") }, svg);
+        nameLabel.textContent = p.name.replace(/^\S+\s/, "") + " $" + p.val;
+      }
+    });
+  })();
+
+  /* ---------- tables ---------- */
+  function posChip(p) {
+    var chip = document.createElement("span");
+    chip.className = "pos-chip";
+    var swatch = document.createElement("i");
+    swatch.style.background = cssVar(POS_VAR[p.pos]);
+    chip.appendChild(swatch);
+    chip.appendChild(document.createTextNode(p.pos + (p.rankLabel || "")));
+    return chip;
+  }
+  function flagCell(p) {
+    var td = document.createElement("td");
+    if (p.flag) {
+      var f = FLAGS[p.flag];
+      var span = document.createElement("span");
+      span.className = "flag " + f[1];
+      span.textContent = f[0];
+      td.appendChild(span);
+    }
+    return td;
+  }
+  function textCell(text, cls) {
+    var td = document.createElement("td");
+    if (cls) td.className = cls;
+    td.textContent = text;
+    return td;
+  }
+
+  (function boardTable() {
+    var tbody = document.querySelector("#board-table tbody");
+    PLAYERS.forEach(function (p) {
+      var tr = document.createElement("tr");
+      tr.appendChild(textCell("$" + p.val, "num"));
+      tr.appendChild(textCell(p.yahoo ? "$" + p.yahoo : "—", p.yahoo ? "num" : "num dim"));
+      var tdName = document.createElement("td");
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "p-name";
+      nameSpan.textContent = p.name;
+      tdName.appendChild(nameSpan);
+      tr.appendChild(tdName);
+      var tdPos = document.createElement("td");
+      tdPos.appendChild(posChip({ pos: p.pos, rankLabel: posRank(p) }));
+      tr.appendChild(tdPos);
+      tr.appendChild(textCell(p.team));
+      tr.appendChild(flagCell(p));
+      tr.appendChild(textCell(p.note || "", "p-note"));
+      tbody.appendChild(tr);
+    });
+  })();
+
+  (function depthTable() {
+    var tbody = document.querySelector("#depth-table tbody");
+    DEPTH.forEach(function (p) {
+      var tr = document.createElement("tr");
+      tr.appendChild(textCell("$" + p.val, "num"));
+      var tdName = document.createElement("td");
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "p-name";
+      nameSpan.textContent = p.name;
+      tdName.appendChild(nameSpan);
+      tr.appendChild(tdName);
+      var tdPos = document.createElement("td");
+      tdPos.appendChild(posChip({ pos: p.pos }));
+      tr.appendChild(tdPos);
+      tr.appendChild(textCell(p.team));
+      tr.appendChild(flagCell(p));
+      tr.appendChild(textCell(p.note || "", "p-note"));
+      tbody.appendChild(tr);
+    });
+  })();
+
+  /* ---------- budget calculator (15-man roster) ---------- */
+  (function calculator() {
+    var TOTAL = 200, SPOTS = 15;
+    var spentInput = document.getElementById("calc-spent");
+    var filledInput = document.getElementById("calc-filled");
+    var outLeft = document.getElementById("out-left");
+    var outMax = document.getElementById("out-max");
+    var outAvg = document.getElementById("out-avg");
+    var outOpen = document.getElementById("out-open");
+    var warn = document.getElementById("calc-warn");
+
+    function update() {
+      var spent = Math.max(0, Math.min(TOTAL, Number(spentInput.value) || 0));
+      var filled = Math.max(0, Math.min(SPOTS, Number(filledInput.value) || 0));
+      var open = SPOTS - filled;
+      var left = TOTAL - spent;
+      var impossible = left < open || (filled > 0 && spent < filled);
+      warn.style.display = impossible ? "block" : "none";
+      outLeft.textContent = "$" + left;
+      outOpen.textContent = open;
+      if (open <= 0) {
+        outMax.textContent = "—";
+        outAvg.textContent = "—";
+        return;
+      }
+      var maxBid = Math.max(0, left - (open - 1));
+      outMax.textContent = "$" + maxBid;
+      var avg = left / open;
+      outAvg.textContent = "$" + (avg >= 10 ? Math.round(avg) : avg.toFixed(2));
+    }
+    spentInput.addEventListener("input", update);
+    filledInput.addEventListener("input", update);
+    update();
+  })();
+})();
+</script>
