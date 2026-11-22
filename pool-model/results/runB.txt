@@ -1,0 +1,10 @@
+MODEL max-wins card          wins 6.332  season $ 2029.27  weekly $  1.03  total $ 2030.30  card MIA CAR CHI TEN TB ARI NYG NYJ LV PHI MIN CIN
+top $                        wins 6.307  season $ 2030.03  weekly $  1.45  total $ 2031.48  card MIA CAR NO TEN TB ARI NYG NYJ LV PHI MIN CIN
+top $                        wins 6.332  season $ 2029.27  weekly $  1.03  total $ 2030.30  card MIA CAR CHI TEN TB ARI NYG NYJ LV PHI MIN CIN
+top $                        wins 6.283  season $ 2025.48  weekly $  2.18  total $ 2027.67  card BUF CAR NO TEN TB ARI NYG NYJ LV PHI MIN CIN
+top $                        wins 6.309  season $ 2025.45  weekly $  1.86  total $ 2027.31  card BUF CAR CHI TEN TB ARI NYG NYJ LV PHI MIN CIN
+top $                        wins 6.295  season $ 2024.47  weekly $  1.67  total $ 2026.14  card MIA CAR NO TEN TB ARI NYG NYJ DEN PHI MIN CIN
+top $                        wins 6.320  season $ 2025.17  weekly $  0.85  total $ 2026.03  card MIA CAR CHI TEN TB ARI NYG NYJ DEN PHI MIN CIN
+top $                        wins 6.300  season $ 2022.98  weekly $  1.72  total $ 2024.70  card MIA BAL CHI TEN TB ARI NYG NYJ LV PHI MIN CIN
+top $                        wins 6.305  season $ 2022.64  weekly $  1.29  total $ 2023.94  card MIA CAR CHI DAL TB ARI NYG NYJ LV PHI MIN CIN
+share on fav: {np.str_('BUF'): np.float64(0.489), np.str_('CAR'): np.float64(0.703), np.str_('CHI'): np.float64(0.618), np.str_('DAL'): np.float64(0.563), np.str_('DET'): np.float64(0.621), np.str_('KC'): np.float64(0.539), np.str_('JAC'): np.float64(0.492), np.str_('LAC'): np.float64(0.426), np.str_('DEN'): np.float64(0.511), np.str_('PIT'): np.float64(0.679), np.str_('SF'): np.float64(0.479), np.str_('CIN'): np.float64(0.837)}
