@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/tmp/claude-0/-home-user-Justin/bd92ee02-4857-5c71-ab61-ff408eafe9a7/scratchpad/model/bt/eval_bt.py", line 2, in <module>
+    B=pd.read_pickle('bt_scored.pkl')
+  File "/usr/local/lib/python3.13/site-packages/pandas/io/pickle.py", line 220, in read_pickle
+    with get_handle(
+         ~~~~~~~~~~^
+        filepath_or_buffer,
+        ^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        storage_options=storage_options,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as handles:
+    ^
+  File "/usr/local/lib/python3.13/site-packages/pandas/io/common.py", line 939, in get_handle
+    handle = open(handle, ioargs.mode)
+FileNotFoundError: [Errno 2] No such file or directory: 'bt_scored.pkl'
